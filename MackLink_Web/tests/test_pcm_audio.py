@@ -65,6 +65,70 @@ class PacketTests(unittest.TestCase):
 
 
 class SenderTests(unittest.TestCase):
+    def test_opus_only_never_calls_pcm_gate_or_packet_builder(self):
+        checks = []
+        sender = SystemPCMSender(lambda: checks.append(True) or True)
+        self.assertFalse(sender.wants_frames())
+        self.assertFalse(sender.send(object()))
+        channel = Channel(); sender.attach(channel)
+        self.assertFalse(sender.wants_frames())
+        sender.sync()
+        self.assertFalse(sender.send(object()))
+        self.assertEqual(checks, [])
+
+    def test_audio_state_controls_opus_without_requiring_ultra_and_acks_disabled(self):
+        changes = []
+        channel = Channel()
+        sender = SystemPCMSender(lambda: False, audio_state=lambda enabled: changes.append(enabled), audio_gate=lambda: True)
+        sender.attach(channel)
+        sender.receive(json.dumps({'type': 'audio-state', 'enabled': False, 'revision': 0}))
+        self.assertEqual(changes, [False])
+        self.assertEqual(json.loads(channel.sent[-1]), {'type': 'audio-state', 'enabled': False, 'revision': 0, 'supported': True})
+        sender.receive(json.dumps(READY))
+        self.assertFalse(sender.ready)
+        sender.receive(json.dumps({'type': 'audio-state', 'enabled': True, 'revision': 1}))
+        self.assertEqual(changes, [False, True])
+        self.assertFalse(sender.wants_frames())
+
+    def test_audio_state_reordering_duplicates_wrap_and_authorization(self):
+        changes, allowed = [], [True]
+        channel = Channel()
+        sender = SystemPCMSender(lambda: True, audio_state=lambda enabled: changes.append(enabled), audio_gate=lambda: allowed[0])
+        sender.attach(channel)
+        def state(enabled, revision): sender.receive(json.dumps({'type': 'audio-state', 'enabled': enabled, 'revision': revision}))
+        state(False, 0xfffffffe)
+        state(False, 0xfffffffe)  # Lost ACK retries do not stop capture again.
+        state(True, 0xfffffffe)   # Conflicting duplicate is invalid.
+        state(True, 0xfffffffd)   # Delayed older enable cannot undo mute.
+        self.assertEqual(changes, [False])
+        self.assertEqual(len(channel.sent), 2)
+        state(True, 0xffffffff)
+        state(False, 0)           # Unsigned wrap still advances.
+        state(True, 0xffffffff)
+        self.assertEqual(changes, [False, True, False])
+        allowed[0] = False
+        state(True, 1)
+        self.assertFalse(sender.audio_enabled)
+        self.assertEqual(sender.audio_revision, 0)
+        allowed[0] = True
+        state(True, 1)
+        self.assertTrue(sender.audio_enabled)
+        self.assertEqual(changes, [False, True, False, True])
+
+    def test_audio_state_rejects_malformed_messages_and_does_not_claim_missing_handler(self):
+        channel, changes = Channel(), []
+        sender = SystemPCMSender(lambda: True, audio_state=lambda enabled: changes.append(enabled))
+        sender.attach(channel)
+        for event in ({'type': 'audio-state', 'enabled': False}, {'type': 'audio-state', 'enabled': 0, 'revision': 0},
+                      {'type': 'audio-state', 'enabled': False, 'revision': True}, {'type': 'audio-state', 'enabled': False, 'revision': -1},
+                      {'type': 'audio-state', 'enabled': False, 'revision': 0x100000000}, {'type': 'audio-state', 'enabled': False, 'revision': 0, 'extra': 1}):
+            sender.receive(json.dumps(event))
+        self.assertEqual(changes, [])
+        self.assertEqual(channel.sent, [])
+        old = SystemPCMSender(lambda: True); old.attach(Channel())
+        old.receive(json.dumps({'type': 'audio-state', 'enabled': False, 'revision': 0}))
+        self.assertEqual(old.channel.sent, [])
+
     def test_original_audio_requires_ready_and_authorization_after_every_pause(self):
         allowed = [False]
         channel = Channel(); sender = SystemPCMSender(lambda: allowed[0]); sender.attach(channel)

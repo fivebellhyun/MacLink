@@ -96,6 +96,109 @@ class PCMTests(unittest.TestCase):
 
 
 class AudioTrackTests(unittest.IsolatedAsyncioTestCase):
+    async def test_muting_stops_capture_and_recv_until_fresh_unmute(self):
+        captures, states = [], []
+        def factory(*args):
+            capture = FakeCapture(*args); captures.append(capture); return capture
+        track = SystemAudioTrack(capture_factory=factory, status=lambda ready, error: states.append((ready, error)))
+        pending = None
+        try:
+            await track.recv()
+            old = captures[0]
+            self.assertTrue(track.set_enabled(False))
+            self.assertTrue(old.closed)
+            self.assertFalse(old.permitted())
+            self.assertEqual((len(track.queue), track.fifo.samples, track.pcm_fifo.samples), (0, 0, 0))
+            pending = asyncio.create_task(track.recv())
+            await asyncio.sleep(.07)
+            old.deliver(tone()); old.failed('capture-failed')
+            await asyncio.sleep(0)
+            self.assertFalse(pending.done())
+            self.assertEqual(len(captures), 1)
+            self.assertFalse(track.failed)
+            self.assertTrue(track.set_enabled(True))
+            fresh = await asyncio.wait_for(pending, .5)
+            self.assertEqual(len(captures), 2)
+            self.assertTrue(captures[1].started)
+            self.assertTrue(any(bytes(fresh.planes[0])))
+            # A native callback from the first capture must remain invalid even
+            # after unmute restores the track's permission predicate.
+            old.deliver(tone()); old.failed('permission')
+            await asyncio.sleep(0)
+            self.assertEqual(len(track.queue), 0)
+            self.assertFalse(track.failed)
+            self.assertEqual(states, [(True, None), (False, None), (True, None)])
+        finally:
+            track.stop()
+            if pending and not pending.done(): pending.cancel()
+
+    async def test_muted_before_recv_never_starts_native_capture(self):
+        captures = []
+        def factory(*args):
+            capture = FakeCapture(*args); captures.append(capture); return capture
+        track = SystemAudioTrack(capture_factory=factory)
+        track.set_enabled(False)
+        pending = asyncio.create_task(track.recv())
+        try:
+            await asyncio.sleep(.07)
+            self.assertEqual(captures, [])
+            self.assertFalse(pending.done())
+            track.set_enabled(True)
+            await asyncio.wait_for(pending, .5)
+            self.assertEqual(len(captures), 1)
+        finally: track.stop()
+
+    async def test_mute_during_native_start_can_unmute_without_cancelling_rtp_receiver(self):
+        entered, cancelled, captures = asyncio.Event(), asyncio.Event(), []
+        class Slow(FakeCapture):
+            async def start(self):
+                entered.set()
+                try: await asyncio.Event().wait()
+                except asyncio.CancelledError:
+                    cancelled.set(); raise
+        def factory(*args):
+            capture = (Slow if not captures else FakeCapture)(*args)
+            captures.append(capture); return capture
+        track = SystemAudioTrack(capture_factory=factory)
+        pending = asyncio.create_task(track.recv())
+        try:
+            await entered.wait()
+            track.set_enabled(False)
+            await cancelled.wait(); await asyncio.sleep(0)
+            self.assertFalse(pending.done())
+            self.assertTrue(captures[0].closed)
+            track.set_enabled(True)
+            await asyncio.wait_for(pending, .5)
+            self.assertEqual(len(captures), 2)
+            self.assertTrue(captures[1].started)
+        finally:
+            track.stop()
+            if not pending.done(): pending.cancel()
+
+    async def test_opus_only_skips_all_float_fifo_preparation_and_pcm_callback(self):
+        class UnusedFloatFIFO:
+            samples = 0
+            def write(self, frame): raise AssertionError('Opus-only path copied float samples')
+            def read(self, *args, **kwargs): raise AssertionError('Opus-only path read float samples')
+        raw, demanded = [], [False]
+        track = SystemAudioTrack(capture_factory=FakeCapture, pcm=raw.append, pcm_demand=lambda: demanded[0])
+        unused = UnusedFloatFIFO(); track.pcm_fifo = unused
+        try:
+            first = await track.recv()
+            for _ in range(3): await track.recv()
+            self.assertTrue(any(bytes(first.planes[0])))
+            self.assertEqual(raw, [])
+            self.assertIs(track.pcm_fifo, unused)
+            from av import AudioFifo
+            track.pcm_fifo = AudioFifo(); demanded[0] = True
+            track.push(tone(samples=2050)); await track.recv()
+            self.assertGreater(track.pcm_fifo.samples, 0)
+            demanded[0] = False
+            await track.recv()
+            self.assertEqual(track.pcm_fifo.samples, 0)
+            self.assertEqual(len(raw), 1)
+        finally: track.stop()
+
     async def test_sample_deadline_absorbs_scheduler_and_processing_delays_without_drift(self):
         clock, delivered, returned, timestamps = AudioClock(), [], [], []
         def pcm(frame):
@@ -470,6 +573,47 @@ class AudioTrackTests(unittest.IsolatedAsyncioTestCase):
             frame = await asyncio.wait_for(received, 10)
             self.assertEqual((frame.sample_rate, frame.layout.name), (48000, 'stereo'))
             self.assertTrue(any(bytes(frame.planes[0])))
+        finally:
+            source.stop(); await viewer.close(); await host.close()
+
+    async def test_real_opus_mute_stops_encoder_and_rtp_until_unmute(self):
+        configuration = RTCConfiguration(iceServers=[])
+        viewer, host = RTCPeerConnection(configuration), RTCPeerConnection(configuration)
+        captures, encoded = [], []
+        def factory(*args):
+            capture = FakeCapture(*args); captures.append(capture); return capture
+        source = SystemAudioTrack(capture_factory=factory)
+        viewer.addTransceiver('audio', direction='recvonly')
+        async def wait_for_encoding(count):
+            async def ready():
+                while len(encoded) < count: await asyncio.sleep(.01)
+            await asyncio.wait_for(ready(), 5)
+        try:
+            await viewer.setLocalDescription(await viewer.createOffer())
+            await host.setRemoteDescription(viewer.localDescription)
+            sender = host.addTrack(source)
+            encoder = install_audio_encoding(sender)
+            original_encode = encoder.encode
+            def encode(frame, force_keyframe=False):
+                encoded.append(frame.pts)
+                return original_encode(frame, force_keyframe)
+            encoder.encode = encode
+            await host.setLocalDescription(await host.createAnswer())
+            await viewer.setRemoteDescription(host.localDescription)
+            await wait_for_encoding(4)
+            source.set_enabled(False)
+            self.assertTrue(captures[0].closed)
+            await asyncio.sleep(.05)  # Let any frame already in the encoder finish.
+            muted_count = len(encoded)
+            muted_stats = next(item for item in (await sender.getStats()).values() if item.type == 'outbound-rtp')
+            await asyncio.sleep(.12)
+            later_stats = next(item for item in (await sender.getStats()).values() if item.type == 'outbound-rtp')
+            self.assertEqual(len(encoded), muted_count)
+            self.assertEqual(later_stats.packetsSent, muted_stats.packetsSent)
+            source.set_enabled(True)
+            await wait_for_encoding(muted_count + 2)
+            self.assertEqual(len(captures), 2)
+            self.assertTrue(captures[1].started)
         finally:
             source.stop(); await viewer.close(); await host.close()
 
