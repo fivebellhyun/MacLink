@@ -1,20 +1,20 @@
 {
-  "version": "1.3.2",
+  "version": "1.4.0",
   "filename": "MacLink-Connector-arm64.dmg",
-  "size": 50314973,
-  "sha256": "99176e05b82d1c77c024c54b0bd0df552b830441cb47e366ff54e7b42a19e470",
+  "size": 50530381,
+  "sha256": "431f61d9c2938f44f837ecda6999f5ca7e10b7975bc500763be9923c88f585dc",
   "parts": [
     {
-      "path": "/downloads/connector/1.3.2-99176e05b82d1c77c024c54b0bd0df552b830441cb47e366ff54e7b42a19e470/part-000.bin",
+      "path": "/downloads/connector/1.4.0-431f61d9c2938f44f837ecda6999f5ca7e10b7975bc500763be9923c88f585dc/part-000.bin",
       "size": 20971520
     },
     {
-      "path": "/downloads/connector/1.3.2-99176e05b82d1c77c024c54b0bd0df552b830441cb47e366ff54e7b42a19e470/part-001.bin",
+      "path": "/downloads/connector/1.4.0-431f61d9c2938f44f837ecda6999f5ca7e10b7975bc500763be9923c88f585dc/part-001.bin",
       "size": 20971520
     },
     {
-      "path": "/downloads/connector/1.3.2-99176e05b82d1c77c024c54b0bd0df552b830441cb47e366ff54e7b42a19e470/part-002.bin",
-      "size": 8371933
+      "path": "/downloads/connector/1.4.0-431f61d9c2938f44f837ecda6999f5ca7e10b7975bc500763be9923c88f585dc/part-002.bin",
+      "size": 8587341
     }
   ]
 }

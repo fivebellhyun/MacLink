@@ -6,7 +6,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const project=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const [input,version='1.3.2']=process.argv.slice(2);
+const [input,version='1.4.0']=process.argv.slice(2);
 if(!input||!path.isAbsolute(input))throw new Error('Pass an absolute path to the built arm64 DMG.');
 if(!/^\d+\.\d+\.\d+(?:[-.][A-Za-z0-9.-]+)?$/.test(version))throw new Error('Invalid version.');
 const filename=path.basename(input);

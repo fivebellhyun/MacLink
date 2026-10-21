@@ -6,7 +6,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 source = Path(SPECPATH)
 project = source.parent
 identity = os.environ.get('MACLINK_CODESIGN_IDENTITY') or None
-version = '1.3.2'
+version = '1.4.0'
 data = collect_data_files('certifi') + [
     (str(source / 'maclink_icon.png'), '.'),
     (str(project / 'LICENSE.md'), 'legal'),
@@ -20,7 +20,7 @@ a = Analysis(
     datas=data,
     hiddenimports=collect_submodules('aiortc') + collect_submodules('av') + [
         'AppKit', 'Foundation', 'Quartz', 'ApplicationServices', 'mss.darwin',
-        'PIL.Image', 'aiohttp', 'certifi',
+        'PIL.Image', 'aiohttp', 'certifi', 'ScreenCaptureKit', 'CoreMedia', 'enrollment',
     ],
     hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=['tkinter'],
     noarchive=False,
@@ -47,7 +47,7 @@ app = BUNDLE(
         'LSUIElement': True,
         'LSMinimumSystemVersion': '13.0',
         'NSHighResolutionCapable': True,
-        'NSScreenCaptureUsageDescription': 'Share your primary display with people you authorize in MacLink.',
+        'NSScreenCaptureUsageDescription': 'Share your primary display and system audio with devices signed in to your MacLink account.',
         'NSAccessibilityUsageDescription': 'Allow keyboard and mouse control for MacLink sessions you authorize.',
     },
 )
