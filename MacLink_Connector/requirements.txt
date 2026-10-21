@@ -8,3 +8,4 @@ certifi>=2025.1.31
 pyobjc-framework-Quartz>=11,<13; sys_platform == 'darwin'
 pyobjc-framework-ApplicationServices>=11,<13; sys_platform == 'darwin'
 pyobjc-framework-Cocoa>=11,<13; sys_platform == 'darwin'
+pyobjc-framework-ScreenCaptureKit>=11,<13; sys_platform == 'darwin'

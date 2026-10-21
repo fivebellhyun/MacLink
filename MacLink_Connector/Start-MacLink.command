@@ -15,7 +15,7 @@ fi
 agent_dir="$HOME/Library/Application Support/MacLink"
 mkdir -p "$agent_dir"
 chmod 700 "$agent_dir"
-cp maclink.py app_runtime.py protocol.py media.py quality.py requirements.txt configure.py autostart.py diagnose.py "$agent_dir/"
+cp maclink.py app_runtime.py enrollment.py protocol.py media.py system_audio.py pcm_audio.py quality.py video_encoding.py requirements.txt configure.py autostart.py diagnose.py "$agent_dir/"
 if [ ! -x "$agent_dir/venv/bin/python" ]; then "$agent_python" -m venv "$agent_dir/venv"; fi
 if [ ! -f "$agent_dir/installed-requirements.txt" ] || ! cmp -s requirements.txt "$agent_dir/installed-requirements.txt"; then
  echo 'Installing the libraries required by MacLink. The first installation may take a few minutes.'

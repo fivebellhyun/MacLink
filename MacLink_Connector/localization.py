@@ -7,6 +7,30 @@ LANGUAGE_KEY = 'MacLinkUILanguage'
 LANGUAGES = ('ko', 'en')
 
 ENGLISH = {
+    'Google 계정으로 연결': 'Connect with Google',
+    'Google 계정으로 이 Mac을 연결하세요': 'Connect this Mac with Google',
+    'Google 로그인으로 이 Mac을 자동 등록합니다.': 'Register this Mac automatically with Google sign-in.',
+    '브라우저에서 로그인하면 이 Mac이 자동으로 등록됩니다.': 'Sign in in your browser to register this Mac automatically.',
+    '고급: 기기 키 가져오기…': 'Advanced: Import key…',
+    '브라우저에서 계속하기': 'Continue in browser',
+    '연결 준비 중…': 'Preparing connection…',
+    '내 기기 열기': 'Open My devices',
+    '확인 코드: {code}\n브라우저에 입력한 뒤 승인하세요.': 'Verification code: {code}\nEnter it in the browser, then approve.',
+    '안전한 연결을 준비하고 있습니다.': 'Preparing a secure connection.',
+    '네트워크를 기다리는 중입니다. 자동으로 다시 시도합니다.': 'Waiting for the network. Retrying automatically.',
+    '등록 요청을 취소하고 있습니다.': 'Cancelling registration.',
+    '등록을 저장하고 커넥터를 시작합니다.': 'Saving registration and starting the Connector.',
+    '등록하지 못했습니다. 연결 버튼을 눌러 다시 시도해 주세요.': 'Could not register. Press Connect to try again.',
+    '승인 시간이 만료되었습니다. 다시 연결해 주세요.': 'Approval expired. Connect again to retry.',
+    '등록 요청이 취소되었습니다.': 'Registration was cancelled.',
+    '연결 키가 해제되었습니다. Google 계정으로 다시 연결하세요.': 'The connection key was revoked. Reconnect with Google.',
+    '같은 Google 계정의 내 기기에서 이 Mac에 접속할 수 있습니다.': 'Connect to this Mac from My devices using the same Google account.',
+    'Google 계정으로 연결을 눌러 시작하세요.\n기기 연결 키는 앱이 자동으로 보관합니다.': 'Choose Connect with Google to start.\nThe app stores the connection key automatically.',
+    '기기 연결 해제됨 — 다시 연결': 'Device disconnected — reconnect',
+    '이 Mac을 다시 연결할까요?': 'Reconnect this Mac?',
+    '브라우저에서 Google 계정을 확인한 뒤 새 연결 키로 교체합니다. 등록이 완료되기 전까지 기존 설정은 유지됩니다.': 'Confirm your Google account in the browser to replace the connection key. Your existing settings remain until registration completes.',
+    '기기를 연결할 수 없습니다': 'Could not connect this Mac',
+    '등록 정보를 안전하게 저장하지 못했습니다. 로그나 기기 키를 공유하지 말고 다시 시도해 주세요.': 'Could not store registration safely. Try again without sharing logs or connection keys.',
     '홈': 'Home', '설정': 'Settings', '후원': 'Support',
     '표시 언어': 'Display language', '언어 설정': 'Language settings',
     '버전 확인': 'Version check', '최신 버전 확인': 'Check for updates',
@@ -65,7 +89,7 @@ ENGLISH = {
     '재연결 중': 'Reconnecting', '중지 중': 'Stopping', '오류': 'Error',
     '기기 키 취소됨 — 새 키 가져오기': 'Connection key revoked — import a new key',
     '오류 — 로그 확인': 'Error — check the log', '시작 실패 — 로그 확인': 'Could not start — check the log',
-    '없음': 'None', '승인 대기': 'Awaiting approval', '준비 중': 'Preparing',
+    '없음': 'None', '준비 중': 'Preparing',
     '접속 중': 'Connected', '일시 중지': 'Paused', '화면 보기': 'View only', '원격 제어': 'Remote control',
     '화면 기록 설정…': 'Screen Recording settings…', '기기 제어 설정…': 'Accessibility settings…',
     '확인': 'OK', '가져오기': 'Import', '취소': 'Cancel',
@@ -80,8 +104,8 @@ ENGLISH = {
     '읽을 수 있는 MacLink JSON 파일을 선택하세요.': 'Select a readable MacLink JSON file.',
     '웹사이트에서 다운로드한 maclink-config.json을 선택하세요.': 'Select maclink-config.json downloaded from your website.',
     '이 기기 키를 사용하시겠습니까?': 'Use this connection key?',
-    '웹사이트: {site}\n기기: {name}\n\n이 웹사이트에 등록한 본인의 기기인지 확인하세요. 기존 키가 있으면 교체되며 현재 원격 세션은 종료됩니다. 일회용 초대는 Mac에서 연결 승인을 요청합니다.':
-        'Website: {site}\nDevice: {name}\n\nConfirm this is your device registered on this website. Any existing key will be replaced and the current remote session will end. One-time invitations request approval on the Mac.',
+    '웹사이트: {site}\n기기: {name}\n\n이 웹사이트에서 본인의 Google 계정에 등록한 기기인지 확인하세요. 같은 계정으로 로그인한 컴퓨터의 내 기기에서 연결할 수 있습니다. 기존 키가 있으면 교체되며 현재 원격 세션은 종료됩니다.':
+        'Website: {site}\nDevice: {name}\n\nConfirm this device is registered to your Google account on this website. Sign in with the same account on another computer and connect from My Devices. Any existing key will be replaced and the current remote session will end.',
     '연결 로그를 확인해 주세요.': 'Check the connection log.',
     '로그인 실행 설정 실패': 'Could not change login startup',
     '로그인 항목을 변경하지 못했습니다. 시스템 설정 → 일반 → 로그인 항목을 확인하세요.':
@@ -96,7 +120,6 @@ ENGLISH = {
     '웹사이트 주소는 인증 정보가 없는 기본 HTTPS 주소여야 합니다.': 'The website must be a base HTTPS address without credentials.',
     '기기 키가 유효하지 않습니다. 웹사이트에서 새 키를 다운로드하세요.': 'The device key is invalid. Download a new key from your website.',
     '기기 이름이 유효하지 않습니다.': 'The device name is invalid.',
-    '무인 연결 설정은 true 또는 false여야 합니다.': 'The unattended setting must be true or false.',
     '다른 MacLink 커넥터가 실행 중입니다. 기존 Terminal 또는 로그인 커넥터를 먼저 중지하세요.':
         'Another MacLink connector is running. Stop the old Terminal or login connector first.',
 }
@@ -109,7 +132,6 @@ _RUNTIME_KEYS = {ENGLISH[key]: key for key in (
     '기기 키 파일에는 JSON 객체가 있어야 합니다.', '기기 키 파일에 웹사이트, 기기 또는 키가 없습니다.',
     '웹사이트 주소는 인증 정보가 없는 기본 HTTPS 주소여야 합니다.',
     '기기 키가 유효하지 않습니다. 웹사이트에서 새 키를 다운로드하세요.', '기기 이름이 유효하지 않습니다.',
-    '무인 연결 설정은 true 또는 false여야 합니다.',
     '다른 MacLink 커넥터가 실행 중입니다. 기존 Terminal 또는 로그인 커넥터를 먼저 중지하세요.',
 )}
 

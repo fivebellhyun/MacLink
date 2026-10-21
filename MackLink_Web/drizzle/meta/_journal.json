@@ -50,6 +50,27 @@
       "when": 1792222602030,
       "tag": "0006_remove_https_relay",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792415639194,
+      "tag": "0007_account_devices",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792417863625,
+      "tag": "0008_restore_email_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1792491067630,
+      "tag": "0009_connector_enrollment",
+      "breakpoints": true
     }
   ]
 }

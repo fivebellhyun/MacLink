@@ -249,7 +249,7 @@ class ConnectorPanel:
         self.scroll.setAutohidesScrollers_(True)
         self.scroll.setHasHorizontalScroller_(False)
         self.view.addSubview_(self.scroll)
-        self.pages = [MacLinkPanelView.alloc().initWithFrame_(((0, 0), (388, height))) for height in (512, 892, 496)]
+        self.pages = [MacLinkPanelView.alloc().initWithFrame_(((0, 0), (388, height))) for height in (628, 1000, 496)]
         self._build_home(self.pages[0], target)
         self._build_settings(self.pages[1], target)
         self._build_support(self.pages[2], target)
@@ -284,7 +284,7 @@ class ConnectorPanel:
         connection = _card(page, ((0, 0), (388, 144)))
         _label(connection, '서버 연결', ((18, 16), (280, 18)), 12, bold=True, secondary=True)
         self.connection = _label(connection, '확인 중', ((18, 42), (350, 33)), 24, bold=True)
-        self.device = _label(connection, '기기 키를 가져와 연결하세요', ((18, 82), (350, 20)), 13)
+        self.device = _label(connection, 'Google 계정으로 이 Mac을 연결하세요', ((18, 82), (350, 20)), 13)
         self.session = _label(connection, '세션: 없음', ((18, 111), (350, 18)), 12, secondary=True)
 
         permissions = _card(page, ((0, 156), (388, 128)))
@@ -296,21 +296,26 @@ class ConnectorPanel:
         self.screen.setAlignment_(A.NSTextAlignmentRight)
         self.input.setAlignment_(A.NSTextAlignmentRight)
 
-        self.buttons['site'] = [_button(page, 'MacLink 웹사이트 열기', ((0, 300), (388, 48)), target, 'openSite:', primary=True, symbol='arrow.up.right.square', rounded=True)]
-        _trim_vertical_padding(self.buttons['site'][0], 0.70)
-        self.home_start = _button(page, '커넥터 시작', ((0, 364), (188, 48)), target, 'startWorker:', symbol='play.fill', rounded=True)
-        self.buttons['stop'] = [_button(page, '연결 중지', ((200, 364), (188, 48)), target, 'stopWorker:', symbol='stop.fill', rounded=True)]
-        notice = _card(page, ((0, 428), (388, 68)))
+        registration = _card(page, ((0, 300), (388, 164)))
+        self.buttons['account'] = [_button(registration, 'Google 계정으로 연결', ((16, 14), (356, 48)), target, 'connectGoogle:', primary=True, symbol='person.crop.circle', rounded=True)]
+        self.registration_home = _label(registration, '브라우저에서 로그인하면 이 Mac이 자동으로 등록됩니다.', ((18, 78), (244, 64)), 12, secondary=True, lines=3)
+        self.buttons['cancelEnrollment'] = [_button(registration, '취소', ((274, 82), (98, 40)), target, 'cancelEnrollment:', rounded=True)]
+        self.home_start = _button(page, '커넥터 시작', ((0, 480), (188, 48)), target, 'startWorker:', symbol='play.fill', rounded=True)
+        self.buttons['stop'] = [_button(page, '연결 중지', ((200, 480), (188, 48)), target, 'stopWorker:', symbol='stop.fill', rounded=True)]
+        notice = _card(page, ((0, 544), (388, 68)))
         self.notice = _label(notice, '기기 키와 권한은 설정에서 관리할 수 있습니다.', ((18, 15), (352, 40)), 12, secondary=True, lines=2)
 
     def _build_settings(self, page, target):
-        setup = _card(page, ((0, 0), (388, 140)))
+        setup = _card(page, ((0, 0), (388, 248)))
         _label(setup, '이 Mac 연결하기', ((18, 15), (352, 22)), 15, bold=True)
-        _label(setup, '웹에서 받은 기기 키로 연결을 설정하세요.', ((18, 42), (352, 20)), 12, secondary=True)
-        self.buttons['import'] = [_button(setup, '기기 키 가져오기…', ((16, 80), (218, 48)), target, 'importKey:', symbol='square.and.arrow.down')]
-        self.buttons['log'] = [_button(setup, '로그 열기', ((246, 80), (126, 48)), target, 'openLog:', symbol='doc.text')]
+        _label(setup, 'Google 로그인으로 이 Mac을 자동 등록합니다.', ((18, 42), (352, 20)), 12, secondary=True)
+        self.buttons['account'].append(_button(setup, 'Google 계정으로 연결', ((16, 72), (356, 48)), target, 'connectGoogle:', primary=True, symbol='person.crop.circle', rounded=True))
+        self.registration_settings = _label(setup, '브라우저에서 로그인하면 이 Mac이 자동으로 등록됩니다.', ((18, 132), (244, 52)), 12, secondary=True, lines=3)
+        self.buttons['cancelEnrollment'].append(_button(setup, '취소', ((274, 136), (98, 40)), target, 'cancelEnrollment:', rounded=True))
+        self.buttons['import'] = [_button(setup, '고급: 기기 키 가져오기…', ((16, 194), (218, 40)), target, 'importKey:', symbol='square.and.arrow.down')]
+        self.buttons['log'] = [_button(setup, '로그 열기', ((246, 194), (126, 40)), target, 'openLog:', symbol='doc.text')]
 
-        controls = _card(page, ((0, 156), (388, 176)))
+        controls = _card(page, ((0, 264), (388, 176)))
         _label(controls, '커넥터', ((18, 15), (352, 20)), 15, bold=True)
         self.buttons['start'] = [_button(controls, '시작', ((16, 52), (110, 48)), target, 'startWorker:', symbol='play.fill')]
         self.buttons['stop'].append(_button(controls, '중지', ((138, 52), (110, 48)), target, 'stopWorker:', symbol='stop.fill'))
@@ -327,7 +332,7 @@ class ConnectorPanel:
         self.login.setAction_('toggleLogin:')
         self.login.setAccessibilityLabel_(tr('로그인할 때 MacLink 시작'))
         login_row.addSubview_(self.login)
-        language = _card(page, ((0, 508), (388, 112)))
+        language = _card(page, ((0, 616), (388, 112)))
         _label(language, '언어 설정', ((18, 16), (352, 23)), 15, bold=True)
         _label(language, '표시 언어', ((18, 66), (126, 20)), 13)
         self.language = A.NSPopUpButton.alloc().initWithFrame_pullsDown_(((156, 52), (216, 48)), False)
@@ -347,18 +352,18 @@ class ConnectorPanel:
         _trim_vertical_padding(self.language, 0.95)
         language.addSubview_(self.language)
 
-        permissions = _card(page, ((0, 348), (388, 144)))
+        permissions = _card(page, ((0, 456), (388, 144)))
         _label(permissions, 'macOS 권한 설정', ((18, 15), (352, 20)), 15, bold=True)
         self.buttons['screenPane'] = [_button(permissions, '화면 기록', ((16, 54), (172, 48)), target, 'openScreen:', symbol='rectangle.on.rectangle', tooltip='시스템 설정에서 화면 기록 권한 열기')]
         self.buttons['inputPane'] = [_button(permissions, '기기 제어', ((200, 54), (172, 48)), target, 'openInput:', symbol='cursorarrow', tooltip='시스템 설정의 손쉬운 사용에서 기기 제어 권한 열기')]
         _label(permissions, '시스템 설정에서 이 MacLink 앱을 허용해 주세요.', ((18, 114), (352, 18)), 11, secondary=True)
-        version = _card(page, ((0, 636), (388, 176)))
+        version = _card(page, ((0, 744), (388, 176)))
         _label(version, '버전 확인', ((18, 15), (352, 20)), 15, bold=True)
         _label(version, tr('현재 버전: {version}').format(version=self.version), ((18, 47), (352, 20)), 13)
         self.version_status = _label(version, '버튼을 눌러 최신 버전을 확인하세요.', ((18, 77), (352, 30)), 11, secondary=True, lines=2)
         self.update_button = _button(version, '최신 버전 확인', ((16, 116), (356, 48)), target, 'checkVersion:', symbol='arrow.clockwise')
 
-        self.buttons['quit'] = [_button(page, 'MacLink 종료', ((0, 828), (388, 48)), target, 'quitApp:', symbol='power', rounded=True)]
+        self.buttons['quit'] = [_button(page, 'MacLink 종료', ((0, 936), (388, 48)), target, 'quitApp:', symbol='power', rounded=True)]
         _trim_vertical_padding(self.buttons['quit'][0], 0.70)
 
     def update_version(self, snapshot, enabled=True):
@@ -431,8 +436,38 @@ class ConnectorPanel:
         self.home_start.setToolTip_(self.home_start.title())
         self.login.setState_(A.NSControlStateValueOn if snapshot.get('login') else A.NSControlStateValueOff)
         self.login.setEnabled_(not snapshot.get('preview', False))
+        registration = snapshot.get('enrollment', {'status': 'idle'})
+        registering = registration['status'] in ('starting', 'pending', 'network', 'cancelling')
+        if registering:
+            title = '브라우저에서 계속하기' if registration.get('verification_url') else '연결 준비 중…'
+        else:
+            title = '내 기기 열기' if snapshot.get('configured') and not snapshot.get('revoked') else 'Google 계정으로 연결'
+        for button in self.buttons['account']:
+            button.setTitle_(tr(title)); button.setAccessibilityLabel_(tr(title)); button.setToolTip_(tr(title))
+        if registration['status'] in ('pending', 'network') and registration.get('verification_code'):
+            message = tr('확인 코드: {code}\n브라우저에 입력한 뒤 승인하세요.').format(code=registration.get('verification_code') or '—')
+        elif registration['status'] in ('starting', 'network', 'cancelling', 'approved'):
+            message = tr({'starting': '안전한 연결을 준비하고 있습니다.', 'network': '네트워크를 기다리는 중입니다. 자동으로 다시 시도합니다.',
+                          'cancelling': '등록 요청을 취소하고 있습니다.', 'approved': '등록을 저장하고 커넥터를 시작합니다.'}[registration['status']])
+        elif registration['status'] == 'failed':
+            message = tr('등록하지 못했습니다. 연결 버튼을 눌러 다시 시도해 주세요.')
+        elif registration['status'] == 'expired':
+            message = tr('승인 시간이 만료되었습니다. 다시 연결해 주세요.')
+        elif registration['status'] == 'cancelled':
+            message = tr('등록 요청이 취소되었습니다.')
+        elif snapshot.get('revoked'):
+            message = tr('연결 키가 해제되었습니다. Google 계정으로 다시 연결하세요.')
+        elif snapshot.get('configured'):
+            message = tr('같은 Google 계정의 내 기기에서 이 Mac에 접속할 수 있습니다.')
+        else:
+            message = tr('브라우저에서 로그인하면 이 Mac이 자동으로 등록됩니다.')
+        for label in (self.registration_home, self.registration_settings): label.setStringValue_(message)
+        for button in self.buttons['cancelEnrollment']:
+            button.setHidden_(not registering); button.setEnabled_(registration['status'] in ('starting', 'pending', 'network'))
         if snapshot.get('preview'):
             notice = 'UI 미리보기입니다.\n기기 키와 실제 권한 상태는 읽지 않습니다.'
+        elif not snapshot.get('configured') and not snapshot.get('online'):
+            notice = 'Google 계정으로 연결을 눌러 시작하세요.\n기기 연결 키는 앱이 자동으로 보관합니다.'
         elif not snapshot['screen'] or not snapshot['input']:
             notice = '권한 설정이 필요합니다.\n설정에서 화면 기록과 기기 제어를 허용해 주세요.'
         elif snapshot.get('online'):
@@ -448,4 +483,4 @@ def preview_snapshot():
     return {'connection': tr('미리보기'), 'device': tr('MacLink 메뉴 막대 앱'), 'session': tr('확인 안 함'),
             'screen': None, 'input': None, 'online': False, 'running': False, 'login': False,
             'preview': True, 'enabled': {key: False for key in
-                ('site', 'start', 'stop', 'restart', 'import', 'log', 'screenPane', 'inputPane')}}
+                ('account', 'cancelEnrollment', 'site', 'start', 'stop', 'restart', 'import', 'log', 'screenPane', 'inputPane')}}

@@ -1,18 +1,25 @@
+import {PCM_CHANNEL_LABEL} from './pcm-audio.ts';
 import type {IceConfig} from './turn';
 export type {IceConfig} from './turn';
 export type ConnectionMode='auto'|'tls';
-export type StoredConnection={id:string;token:string;name:string;mode:string;status:string;generation:number;inviteId?:string;connectionMode?:ConnectionMode};
+export type StoredConnection={id:string;token:string;name:string;mode:string;status:string;generation:number;deviceId:string;ownerId:string;connectionMode?:ConnectionMode};
 const KEY='maclink.current-connection';
-export function rememberConnection(s:StoredConnection){try{sessionStorage.setItem(KEY,JSON.stringify({id:s.id,token:s.token,name:s.name,mode:s.mode,status:s.status,generation:s.generation,inviteId:s.inviteId,connectionMode:s.connectionMode==='tls'?'tls':'auto'}));}catch{}}
+export function rememberConnection(s:StoredConnection){try{sessionStorage.setItem(KEY,JSON.stringify({id:s.id,token:s.token,name:s.name,mode:s.mode,status:s.status,generation:s.generation,deviceId:s.deviceId,ownerId:s.ownerId,connectionMode:s.connectionMode==='tls'?'tls':'auto'}));}catch{}}
 export function forgetConnection(){try{sessionStorage.removeItem(KEY);}catch{}}
-export function restoreConnection():StoredConnection|null{try{const s=JSON.parse(sessionStorage.getItem(KEY)||'null');return s&&/^[a-f0-9]{24}$/.test(s.id)&&/^[a-f0-9]{64}$/.test(s.token)&&['view','control'].includes(s.mode)?s:null;}catch{return null;}}
+export function restoreConnection(ownerId:string,deviceIds:readonly string[]):StoredConnection|null{
+ try{
+  const s=JSON.parse(sessionStorage.getItem(KEY)||'null');
+  if(s&&ownerId&&s.ownerId===ownerId&&deviceIds.includes(s.deviceId)&&/^[a-f0-9]{24}$/.test(s.deviceId)&&/^[a-f0-9]{24}$/.test(s.id)&&/^[a-f0-9]{64}$/.test(s.token)&&['view','control'].includes(s.mode))return s;
+ }catch{}
+ forgetConnection();return null;
+}
 export function tlsIceServers(config:IceConfig):RTCIceServer[]{return config.iceServers.map(s=>({...s,urls:s.urls.filter(u=>/^turns:[^/?]+:443\?transport=tcp$/.test(u))})).filter(s=>s.urls.length>0);}
 export function peerConfiguration(config:IceConfig,mode:ConnectionMode='auto'):RTCConfiguration{
  const iceServers=mode==='tls'?tlsIceServers(config):config.iceServers;
  if(mode==='tls'&&(!config.turnEnabled||!iceServers.length))throw new Error(config.warning||'맥 소유자가 연결 설정에서 TURN 키를 먼저 등록해야 합니다.');
  return {iceServers,iceTransportPolicy:mode==='tls'?'relay':'all',bundlePolicy:'max-bundle'};
 }
-export function createPeer(config:IceConfig,mode:ConnectionMode='auto'){const peer=new RTCPeerConnection(peerConfiguration(config,mode));peer.addTransceiver('video',{direction:'recvonly'});const channel=peer.createDataChannel('control',{ordered:true});return{peer,channel};}
+export function createPeer(config:IceConfig,mode:ConnectionMode='auto'){const peer=new RTCPeerConnection(peerConfiguration(config,mode));peer.addTransceiver('video',{direction:'recvonly'});peer.addTransceiver('audio',{direction:'recvonly'});const channel=peer.createDataChannel('control',{ordered:true});const pcmChannel=peer.createDataChannel(PCM_CHANNEL_LABEL,{ordered:false,maxRetransmits:0});pcmChannel.binaryType='arraybuffer';return{peer,channel,pcmChannel};}
 export async function makeOffer(peer:RTCPeerConnection){
  await peer.setLocalDescription(await peer.createOffer());
  await new Promise<void>((resolve,reject)=>{

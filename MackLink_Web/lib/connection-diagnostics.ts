@@ -21,7 +21,7 @@ export type ConnectionReportContext = {
 const STATES = new Set([
  'new','connecting','connected','disconnected','failed','closed','checking',
  'completed','gathering','complete','open','closing','online','offline',
- 'webrtc','stalled','live','held','pending','accepted','ended',
+ 'webrtc','stalled','live','held','ended',
 ]);
 const EVENTS = new Set<string>(DIAGNOSTIC_EVENTS);
 const REASONS = new Set<string>(DIAGNOSTIC_REASONS);
@@ -99,7 +99,7 @@ async function selectedPair(peer:StatsSource){
 export async function buildConnectionReport(trace:ConnectionDiagnostics,peer:StatsSource|null|undefined,context:ConnectionReportContext):Promise<string>{
  const version=typeof context.connectorVersion==='string'&&/^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(context.connectorVersion)?context.connectorVersion:null;
  const report={
-  format:'MacLink connection diagnostics',version:1,viewerVersion:'1.3.2',generatedAt:new Date().toISOString(),
+  format:'MacLink connection diagnostics',version:1,viewerVersion:'1.4.0',generatedAt:new Date().toISOString(),
   connection:{
    mode:oneOf(context.mode,['auto','tls']),
    generation:integer(context.generation,1_000_000_000),connectorVersion:version,

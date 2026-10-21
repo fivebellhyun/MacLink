@@ -58,13 +58,16 @@ def log_event(event,**fields):
 async def close_attachment(state,authorization,controller,quality,expected=None,retire=None):
  """Detach before awaiting a peer close, so late teardown cannot clear its replacement."""
  if expected is not None and expected is not state['owner']:return
- old_pc,old_track=state['pc'],state['track'];setting=state['setting']
+ old_pc,old_track=state['pc'],state['track'];old_audio=state.get('audio');setting=state['setting']
+ old_pcm=state.get('pcm')
  encoding=state.get('encoding')
- state.update(pc=None,session=None,channel=None,ready=False,track=None,owner=None,paused=False,encoding=None)
+ state.update(pc=None,session=None,channel=None,ready=False,track=None,audio=None,pcm=None,audio_available=False,audio_error=None,owner=None,paused=False,encoding=None)
+ if old_pcm:old_pcm.close()
  if encoding:encoding.close()
  authorization.revoke();controller.release();controller.seq=0;quality.select('balanced')
  if setting and setting is not asyncio.current_task() and not setting.done():setting.cancel()
  if old_track:old_track.stop()
+ if old_audio:old_audio.stop()
  if old_pc:
   if retire is not None:retire(old_pc)
   else:await old_pc.close()
@@ -125,7 +128,9 @@ async def main(config_path,status_path=None):
  import ApplicationServices as AX
  import aiohttp, certifi, mss
  from PIL import Image
- from media import DesktopVideoTrack
+ from media import DesktopVideoTrack,SystemAudioTrack
+ from system_audio import available as system_audio_available
+ from pcm_audio import CHANNEL_LABEL,SystemPCMSender,install_audio_encoding
  from aiortc import RTCPeerConnection,RTCSessionDescription,RTCConfiguration,RTCIceServer,RTCRtpSender
  from video_encoding import install_video_encoding
  config=load_config(Path(config_path));site=config['site'];device=config['device'];token=config['token']
@@ -145,7 +150,8 @@ async def main(config_path,status_path=None):
   if 'mss' not in capture_state:capture_state['mss']=mss.mss()
   bounds=controller.bounds();region={'left':int(bounds.origin.x),'top':int(bounds.origin.y),'width':int(bounds.size.width),'height':int(bounds.size.height)}
   shot=capture_state['mss'].grab(region);im=Image.frombytes('RGB',shot.size,shot.bgra,'raw','BGRX');return prepare_capture(im,quality.profile)
- state={'session':None,'pc':None,'ready':False,'setting':None,'approval':None,'channel':None,'track':None,'owner':None,'paused':False,'encoding':None}
+ audio_supported=system_audio_available()
+ state={'session':None,'pc':None,'ready':False,'setting':None,'channel':None,'track':None,'audio':None,'pcm':None,'audio_available':False,'audio_error':None,'owner':None,'paused':False,'encoding':None}
  authorization=SessionAuthorization();notices=set();notice_keys=set();retirements=set();stopping=asyncio.Event()
  publisher=StatusPublisher(status_path) if status_path else None
  status_connection='connecting';status_error='none';reported_session=None
@@ -174,6 +180,8 @@ async def main(config_path,status_path=None):
     if r.status in (401,403):
      report(connection='error',error='revoked');stopping.set();authorization.revoke();controller.release()
      if state['track']:state['track'].stop()
+     if state['audio']:state['audio'].stop()
+     if state['pcm']:state['pcm'].pause()
      raise AgentResponseError(r.status,'The device key has been revoked. Register the device again on the website.')
     if r.status>=500 or r.status==429:raise AgentResponseError(r.status,'Waiting for the server to respond. MacLink will reconnect automatically.')
     data=await r.json()
@@ -187,6 +195,8 @@ async def main(config_path,status_path=None):
    if state['session'] and not state['paused']:
     state['paused']=True;controller.release()
     if state['track']:state['track'].pause()
+    if state['audio']:state['audio'].pause()
+    if state['pcm']:state['pcm'].pause()
     log_event('Authorization paused; peer retained',generation=state['session'].get('generation',0));report()
   def retire_peer(pc):
    async def close_peer():
@@ -207,17 +217,6 @@ async def main(config_path,status_path=None):
     except Exception as error:log_event('Server notification failed',action=action,error=type(error).__name__,status=getattr(error,'status',0))
     finally:notice_keys.discard(key)
    task=asyncio.create_task(send_notice());notices.add(task);task.add_done_callback(notices.discard)
-  def prompt(s):
-   label='view your screen' if s['mode']=='view' else 'view your screen and control your keyboard and mouse'
-   message=str(s['name'])+' requests permission to '+label+'. Allow this connection?'
-   script='on run argv\n display dialog (item 1 of argv) with title "MacLink Connection Request" buttons {"Deny", "Allow"} default button "Deny" giving up after 60\n if gave up of result then return "Deny"\n return button returned of result\nend run'
-   try:return subprocess.run(['/usr/bin/osascript','-e',script,message],capture_output=True,text=True,timeout=65).stdout.strip()=='Allow'
-   except Exception:return False
-  async def approve(s):
-   try:
-    allow=config.get('allow_unattended',False) or await asyncio.to_thread(prompt,s)
-    await api('decision',{'session':s['id'],'allow':allow})
-   except Exception as error:log_event('Approval processing failed',error=type(error).__name__,status=getattr(error,'status',0))
   async def setup(s,owner):
    pc=None
    try:
@@ -228,9 +227,20 @@ async def main(config_path,status_path=None):
     if not current(owner,s):return
     pc=RTCPeerConnection(RTCConfiguration(iceServers=[RTCIceServer(urls='stun:stun.cloudflare.com:3478')]))
     state['pc']=pc;controller.seq=0;controller.last_packet=time.monotonic()
+    pcm=SystemPCMSender(gate=lambda:quality.name=='ultra' and pc.connectionState=='connected' and permitted(owner,s,pc))
+    state['pcm']=pcm
     @pc.on('datachannel')
     def channel_open(channel):
      if not current(owner,s,pc):return
+     if channel.label==CHANNEL_LABEL:
+      if not pcm.attach(channel):return
+      @channel.on('message')
+      def audio_message(raw):
+       if current(owner,s,pc):pcm.receive(raw)
+      @channel.on('close')
+      def audio_closed():pcm.detach(channel)
+      return
+     if channel.label!='control':channel.close();return
      state['channel']=channel
      @channel.on('message')
      def message(raw):
@@ -248,7 +258,7 @@ async def main(config_path,status_path=None):
     async def connection_changed():
      if current(owner,s,pc):
       log_event('WebRTC state',state=pc.connectionState,generation=s.get('generation',0))
-      if pc.connectionState in ('failed','disconnected','closed'):controller.release()
+      if pc.connectionState in ('failed','disconnected','closed'):controller.release();pcm.pause()
     await pc.setRemoteDescription(RTCSessionDescription(sdp=s['offer'],type='offer'))
     if not current(owner,s,pc):return
     track=DesktopVideoTrack(capture,executor,quality.profile.fps,gate=lambda:permitted(owner,s,pc))
@@ -256,6 +266,17 @@ async def main(config_path,status_path=None):
     transceiver=next(item for item in pc.getTransceivers() if item.sender is sender)
     transceiver.setCodecPreferences(sorted(RTCRtpSender.getCapabilities('video').codecs,key=lambda codec:codec.mimeType.lower()!='video/vp8'))
     state['encoding']=install_video_encoding(sender,quality,remote_sdp=pc.remoteDescription.sdp)
+    def audio_status(available,error):
+     if current(owner,s,pc):
+      state['audio_available']=available;state['audio_error']=error
+      if not available:pcm.pause()
+      log_event('System audio status',available=available,error=error or 'none')
+    audio=SystemAudioTrack(gate=lambda:permitted(owner,s,pc),status=audio_status,pcm=pcm.send)
+    state['audio']=audio;audio_sender=pc.addTrack(audio)
+    audio_transceiver=next(item for item in pc.getTransceivers() if item.sender is audio_sender)
+    audio_transceiver.setCodecPreferences([codec for codec in RTCRtpSender.getCapabilities('audio').codecs if codec.mimeType.lower()=='audio/opus'])
+    try:install_audio_encoding(audio_sender)
+    except Exception as error:log_event('Audio quality tuning unavailable; using default Opus',error=type(error).__name__)
     await pc.setLocalDescription(await pc.createAnswer())
     if not current(owner,s,pc):return
     await api('answer',{'session':s['id'],'generation':s.get('generation',0),'answer':pc.localDescription.sdp})
@@ -278,7 +299,9 @@ async def main(config_path,status_path=None):
     poll_started=time.monotonic()
     try:
      screen=bool(Q.CGPreflightScreenCaptureAccess());accessibility=bool(AX.AXIsProcessTrusted())
-     info={'screen':screen,'accessibility':accessibility,'version':VERSION,'unattended':bool(config.get('allow_unattended')),'qualityControl':True}
+     info={'screen':screen,'accessibility':accessibility,'version':VERSION,'qualityControl':True,
+           'audioSupported':audio_supported,'audioAvailable':bool(state['audio_available'] and state['session'] and authorization.allows(state['session'])),
+           'audioError':'permission' if not screen else state['audio_error'] if audio_supported else 'unavailable'}
      if state['session'] and (not screen or (state['session']['mode']=='control' and not accessibility)):
       old_session=state['session'];notify('end',old_session,reason='Screen Recording or Accessibility permission was revoked on the MacBook.')
       await close_local();log_event('Local permission revoked; connection closed')
@@ -298,9 +321,6 @@ async def main(config_path,status_path=None):
      if not s:
       if state['session'] or state['pc']:
        await close_local();log_event('Connection ended; waiting for a new connection')
-     elif s['status']=='pending':
-      if state['session']:await close_local();authorization.confirm(s)
-      if state['approval'] is None or state['approval'].done():state['approval']=asyncio.create_task(approve(s))
      elif s['status']=='approved' and not state['pc'] and (state['setting'] is None or state['setting'].done()):
       owner=object();state.update(owner=owner,session=s,paused=False)
       state['setting']=asyncio.create_task(setup(s,owner))
@@ -309,9 +329,11 @@ async def main(config_path,status_path=None):
        notify('recover',s)
       else:
        state['session']=s;quality.select(s.get('quality','balanced'),state['track'])
+       if state['pcm']:state['pcm'].sync()
        if state['paused']:
         state['paused']=False
         if state['track']:state['track'].resume()
+        if state['audio']:state['audio'].resume()
         log_event('Authorization restored; existing peer resumed',generation=s.get('generation',0))
      report(connection='online',error='none',session=s,update_session=True)
     except asyncio.CancelledError:raise
@@ -343,9 +365,11 @@ async def main(config_path,status_path=None):
   finally:
    old_session=state['session'];authorization.revoke();controller.release()
    if state['track']:state['track'].stop()
-   for task in tasks+[state['setting'],state['approval']]+list(notices):
+   if state['audio']:state['audio'].stop()
+   if state['pcm']:state['pcm'].pause()
+   for task in tasks+[state['setting']]+list(notices):
     if task:task.cancel()
-   await asyncio.gather(*(task for task in tasks+[state['setting'],state['approval']]+list(notices) if task),return_exceptions=True)
+   await asyncio.gather(*(task for task in tasks+[state['setting']]+list(notices) if task),return_exceptions=True)
    await close_local()
    if retirements:
     with contextlib.suppress(asyncio.TimeoutError):await asyncio.wait_for(asyncio.gather(*list(retirements),return_exceptions=True),5)

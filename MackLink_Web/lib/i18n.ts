@@ -2,6 +2,7 @@ import {homeMessages} from './locales/home.ts';
 import {remoteMessages} from './locales/remote.ts';
 import {networkMessages} from './locales/network.ts';
 import {apiMessages} from './locales/api.ts';
+import {enrollmentMessages} from './locales/enrollment.ts';
 
 export type Locale='ko'|'en';
 export type MessageParams=Record<string,string|number>;
@@ -15,7 +16,7 @@ export const commonMessages:Record<string,string>={
  '선명하게':'Sharp',
  '최고':'Ultra',
 };
-export const messages:Readonly<Record<string,string>>={...homeMessages,...remoteMessages,...networkMessages,...apiMessages,...commonMessages};
+export const messages:Readonly<Record<string,string>>={...homeMessages,...remoteMessages,...networkMessages,...apiMessages,...enrollmentMessages,...commonMessages};
 const koreanByEnglish=new Map(Object.entries(messages).map(([ko,en])=>[en,ko]));
 
 export function normalizeLocale(value:unknown):Locale|null {

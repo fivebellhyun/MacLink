@@ -7,6 +7,8 @@ export type GoogleUser = {
   fullName: string | null;
 };
 
+export type GoogleSession = GoogleUser & { sessionHash: string };
+
 export type GoogleAuthBindings = {
   DB?: D1Database;
   GOOGLE_CLIENT_ID?: string;
@@ -117,16 +119,28 @@ function duplicateParameters(url: URL): boolean {
   return false;
 }
 
-export async function getGoogleUser(req: Request, env: GoogleAuthBindings): Promise<GoogleUser | null> {
+export async function getGoogleSession(req: Request, env: GoogleAuthBindings): Promise<GoogleSession | null> {
   const config = settings(env);
   if (!config || new URL(req.url).origin !== config.origin) return null;
   const token = readCookie(req, config.sessionCookie);
   if (!token) return null;
   try {
+    const sessionHash = await hash(token);
     const user = await config.db.prepare(`SELECT u.id,u.email,u.name FROM auth_sessions s JOIN auth_users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires>?`)
-      .bind(await hash(token), Date.now()).first<{ id: string; email: string; name: string | null }>();
-    return user ? { userId: user.id, email: user.email, fullName: user.name, displayName: user.name || user.email } : null;
+      .bind(sessionHash, Date.now()).first<{ id: string; email: string; name: string | null }>();
+    return user ? { userId: user.id, email: user.email, fullName: user.name, displayName: user.name || user.email, sessionHash } : null;
   } catch { return null; }
+}
+
+export async function getGoogleUser(req: Request, env: GoogleAuthBindings): Promise<GoogleUser | null> {
+  const session = await getGoogleSession(req, env);
+  if (!session) return null;
+  const { sessionHash: _sessionHash, ...user } = session;
+  return user;
+}
+
+function endBrowserConnections(config: Settings, sessionHash: string): D1PreparedStatement {
+  return config.db.prepare("UPDATE sessions SET status='ended',reason='로그인이 종료되었습니다. 다시 로그인해 주세요.',offer='',answer=NULL,generation=generation+1 WHERE auth_session_hash=? AND status!='ended'").bind(sessionHash);
 }
 
 async function start(req: Request, config: Settings, client: oauth.Client, url: URL): Promise<Response> {
@@ -181,7 +195,10 @@ async function callback(req: Request, env: GoogleAuthBindings, config: Settings,
       config.db.prepare('INSERT INTO auth_sessions (token_hash,user_id,created,expires) VALUES (?,?,?,?)')
         .bind(await hash(session), id, now, now + SESSION_LIFETIME * 1000),
     ];
-    if (oldSession) writes.push(config.db.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(await hash(oldSession)));
+    if (oldSession) {
+      const oldHash = await hash(oldSession);
+      writes.push(endBrowserConnections(config, oldHash), config.db.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(oldHash));
+    }
     await config.db.batch(writes);
     return redirect(config.origin + safeReturnPath(transaction.return_path), [clear, cookie(config, config.sessionCookie, session, SESSION_LIFETIME)]);
   } catch {
@@ -194,7 +211,10 @@ async function callback(req: Request, env: GoogleAuthBindings, config: Settings,
 async function signout(req: Request, config: Settings): Promise<Response> {
   if (req.headers.get('origin') !== config.origin || req.headers.get('sec-fetch-site') === 'cross-site') return response(403, '이 사이트에서 로그아웃해 주세요.');
   const token = readCookie(req, config.sessionCookie);
-  if (token) await config.db.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(await hash(token)).run();
+  if (token) {
+    const sessionHash = await hash(token);
+    await config.db.batch([endBrowserConnections(config, sessionHash), config.db.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(sessionHash)]);
+  }
   return redirect(config.origin + '/', [cookie(config, config.sessionCookie, '', 0), cookie(config, config.transactionCookie, '', 0)]);
 }
 

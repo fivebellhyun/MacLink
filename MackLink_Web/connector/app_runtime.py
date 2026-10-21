@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-VERSION = '1.3.2'
+VERSION = '1.4.0'
 WEBSITE_URL = 'https://www.maclink.cloud'
 APP_ROOT = Path.home() / 'Library/Application Support/MacLink'
 CONFIG_PATH = APP_ROOT / 'config.json'
@@ -72,11 +72,8 @@ def validate_config(raw) -> dict:
     name = raw.get('name', 'MacBook')
     if not isinstance(name, str) or not name.strip() or len(name) > 120 or any(ord(char) < 32 for char in name):
         raise ValueError('The device name is invalid.')
-    unattended = raw.get('allow_unattended', False)
-    if not isinstance(unattended, bool):
-        raise ValueError('The unattended setting must be true or false.')
     return {'site': site.rstrip('/'), 'device': device, 'token': token,
-            'name': name.strip(), 'allow_unattended': unattended}
+            'name': name.strip()}
 
 
 def load_config(path: Path = CONFIG_PATH) -> dict:
@@ -99,9 +96,8 @@ def atomic_json(path: Path, payload: dict) -> None:
 
 
 def save_imported_config(config: dict, destination: Path = CONFIG_PATH) -> dict:
-    """Save the exact confirmed data. Import never enables unattended mode."""
+    """Save only the confirmed device registration fields."""
     config = validate_config(config)
-    config['allow_unattended'] = False
     atomic_json(destination, config)
     return config
 
@@ -147,7 +143,7 @@ def worker_running(root: Path = APP_ROOT) -> bool:
 
 
 CONNECTION_STATES = {'starting', 'connecting', 'online', 'reconnecting', 'stopped', 'error'}
-SESSION_STATES = {'idle', 'pending', 'approved', 'active', 'paused'}
+SESSION_STATES = {'idle', 'approved', 'active', 'paused'}
 STATUS_ERRORS = {'none', 'revoked', 'network', 'startup', 'permission', 'worker_exit'}
 
 

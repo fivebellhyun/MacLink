@@ -17,6 +17,7 @@ from app_runtime import (APP_ROOT, CONFIG_PATH, LOG_PATH, STATUS_PATH, VERSION, 
                          InstanceLock, StatusPublisher, WorkerController,
                          atomic_json, load_config, login_enabled, read_status,
                          save_imported_config, set_login_enabled, worker_running)
+from enrollment import ACTIVE_STATES, EnrollmentManager
 
 
 _MENU_ITEMS = (
@@ -26,7 +27,8 @@ _MENU_ITEMS = (
     ('screen', '화면 기록: 확인 중', None),
     ('input', '기기 제어: 확인 중', None),
     (None, None, None),
-    ('import', '기기 키 가져오기…', 'importKey:'),
+    ('account', 'Google 계정으로 연결', 'connectGoogle:'),
+    ('import', '고급: 기기 키 가져오기…', 'importKey:'),
     ('site', 'MacLink 웹사이트 열기', 'openSite:'),
     (None, None, None),
     ('start', '커넥터 시작', 'startWorker:'),
@@ -53,6 +55,10 @@ def self_test():
     import mss.darwin
     import PIL.Image
     import certifi
+    import ScreenCaptureKit
+    import CoreMedia
+    import enrollment
+    import pcm_audio
     registered = run_app(register_only=True)
     print(json.dumps({'delegate': registered, 'native_ui': 'ok', 'version': VERSION, 'executable': sys.executable,
                       'frozen': bool(getattr(sys, 'frozen', False)),
@@ -101,6 +107,10 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
             self.lastError = None
             self.preview = preview_ui
             self.updateChecker = UpdateChecker(VERSION)
+            self.enrollment = EnrollmentManager()
+            self.enrollmentOpened = None
+            self.enrollmentError = False
+            self.revoked = False
             self.statusItem = A.NSStatusBar.systemStatusBar().statusItemWithLength_(A.NSVariableStatusItemLength)
             self.statusItem.button().setTitle_('ML')
             self.statusItem.button().setToolTip_('MacLink ' + VERSION)
@@ -137,6 +147,11 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
                     self.controller.start()
                 except Exception as error:
                     self.lastError = str(error) if isinstance(error, (ValueError, RuntimeError)) else '커넥터를 시작하지 못했습니다. 로그를 확인해 주세요.'
+            if not self.preview and self.config is None:
+                try:
+                    self.enrollment.start(resume_only=True)
+                except Exception:
+                    self.enrollmentError = True
             self.refresh_(None)
             first_dashboard = not self.preview and not (APP_ROOT / 'ui-seen.json').exists()
             if show_panel or self.preview or first_dashboard:
@@ -233,13 +248,13 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
             self.showPanel_(None)
 
         @objc.python_method
-        def alert(self, title, message, confirm=False):
+        def alert(self, title, message, confirm=False, confirm_title='가져오기'):
             self.popover.close()
             A.NSApp.activateIgnoringOtherApps_(True)
             dialog = A.NSAlert.alloc().init()
             dialog.setMessageText_(tr(title))
             dialog.setInformativeText_(tr(message))
-            dialog.addButtonWithTitle_(tr('확인' if not confirm else '가져오기'))
+            dialog.addButtonWithTitle_(tr('확인' if not confirm else confirm_title))
             if confirm:
                 dialog.addButtonWithTitle_(tr('취소'))
             return dialog.runModal() == A.NSAlertFirstButtonReturn
@@ -253,6 +268,14 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
                 return
             try:
                 self.controller.tick()
+                approved = self.enrollment.approved_config()
+                if approved is not None and self.controller.process is None and not self.quitting:
+                    self.config = save_imported_config(approved)
+                    self.enrollment.complete()
+                    self.enrollmentError = False
+                    self.revoked = False
+                    self.lastError = None
+                    self.controller.start()
                 if self.pendingConfig is not None and self.controller.process is None:
                     self.config = save_imported_config(self.pendingConfig)
                     self.pendingConfig = None
@@ -269,6 +292,15 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
             running = process is not None and process.poll() is None
             status = read_status(pid=process.pid if running else self.controller.last_pid) if self.controller.last_pid else None
             external = not running and worker_running()
+            if status and status['error'] == 'revoked':
+                self.revoked = True
+            enrollment = self.enrollment.snapshot()
+            if self.enrollmentError:
+                enrollment = {**enrollment, 'status': 'failed', 'error': 'storage'}
+            enrolling = enrollment['status'] in ACTIVE_STATES
+            if enrollment.get('verification_url') and enrollment['status'] == 'pending' and enrollment['verification_url'] != self.enrollmentOpened:
+                self.enrollmentOpened = enrollment['verification_url']
+                A.NSWorkspace.sharedWorkspace().openURL_(F.NSURL.URLWithString_(self.enrollmentOpened))
             permissions = (bool(Q.CGPreflightScreenCaptureAccess()), bool(AX.AXIsProcessTrusted()))
             connection = '설정 필요' if not self.config else '중지됨'
             if external:
@@ -279,40 +311,79 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
                                   status['connection'] if status else 'starting', '연결 중')
                 if status:
                     permissions = status['screen'], status['accessibility']
-            elif status and status['error'] == 'revoked':
-                connection = '기기 키 취소됨 — 새 키 가져오기'
+            elif self.revoked:
+                connection = '기기 연결 해제됨 — 다시 연결'
             elif self.controller.last_exit not in (None, 0):
                 connection = '오류 — 로그 확인'
             if self.lastError:
                 connection = '시작 실패 — 로그 확인'
             if not running:
                 status = None
-            session = {'idle': '없음', 'pending': '승인 대기', 'approved': '준비 중', 'active': '접속 중', 'paused': '일시 중지'}.get(status['session'] if status else 'idle', '없음')
+            session = {'idle': '없음', 'approved': '준비 중', 'active': '접속 중', 'paused': '일시 중지'}.get(status['session'] if status else 'idle', '없음')
             session_parts = [session]
             if status and status['mode']:
                 session_parts.append('화면 보기' if status['mode'] == 'view' else '원격 제어')
-            busy = self.controller.stop_deadline is not None or self.pendingConfig is not None
+            busy = self.controller.stop_deadline is not None or self.pendingConfig is not None or enrolling or enrollment['status'] == 'approved'
             self.items['start'].setEnabled_(bool(self.config) and not running and not external and not busy)
             self.items['stop'].setEnabled_(running and not busy)
             self.items['restart'].setEnabled_(running and not busy)
             self.items['import'].setEnabled_(not busy and not external)
             self.items['site'].setEnabled_(True)
+            self.items['account'].setEnabled_(not self.quitting and not external and (not busy or bool(enrollment.get('verification_url'))))
             self.items['login'].setState_(A.NSControlStateValueOn if login_enabled() else A.NSControlStateValueOff)
             self.items['log'].setEnabled_(LOG_PATH.exists())
             self.statusItem.button().setTitle_('ML ●' if status and status['session'] == 'active' else 'ML')
             self.renderPresentation({
                 'connection': connection,
-                'device': self.config['name'] if self.config else '기기 키를 가져와 연결하세요',
+                'device': self.config['name'] if self.config else 'Google 계정으로 이 Mac을 연결하세요',
                 'device_placeholder': not bool(self.config),
                 'menu_name': 'MacLink · ' + (self.config['name'] if self.config else VERSION),
                 'session_parts': tuple(session_parts), 'screen': permissions[0], 'input': permissions[1],
                 'online': bool(status and status['connection'] == 'online'), 'running': running,
+                'configured': self.config is not None, 'revoked': self.revoked, 'enrollment': enrollment,
                 'login': self.items['login'].state() == A.NSControlStateValueOn,
                 'enabled': {key: item.isEnabled() for key, item in self.items.items()},
             })
 
+        def connectGoogle_(self, sender):
+            if self.preview or self.quitting:
+                return
+            registration = self.enrollment.snapshot()
+            if registration['status'] == 'approved':
+                self.refresh_(None)
+                return
+            if registration['status'] in ACTIVE_STATES:
+                if registration.get('verification_url'):
+                    A.NSWorkspace.sharedWorkspace().openURL_(F.NSURL.URLWithString_(registration['verification_url']))
+                return
+            if self.config is not None and not self.revoked:
+                self.openSite_(None)
+                return
+            if self.revoked and not self.alert('이 Mac을 다시 연결할까요?', '브라우저에서 Google 계정을 확인한 뒤 새 연결 키로 교체합니다. 등록이 완료되기 전까지 기존 설정은 유지됩니다.', confirm=True, confirm_title='다시 연결'):
+                return
+            self.controller.stop()
+            name = str(F.NSHost.currentHost().localizedName() or 'Mac')
+            name = ''.join(char for char in name if ord(char) >= 32 and ord(char) != 127).strip()[:60] or 'Mac'
+            try:
+                self.enrollment.start(name)
+                self.enrollmentError = False
+                self.enrollmentOpened = None
+            except Exception:
+                self.enrollmentError = True
+                self.alert('기기를 연결할 수 없습니다', '등록 정보를 안전하게 저장하지 못했습니다. 로그나 기기 키를 공유하지 말고 다시 시도해 주세요.')
+            self.showPanel_(None)
+            self.refresh_(None)
+
+        def cancelEnrollment_(self, sender):
+            if not self.preview and not self.quitting:
+                try:
+                    self.enrollment.cancel()
+                except Exception:
+                    self.enrollmentError = True
+                self.refresh_(None)
+
         def importKey_(self, sender):
-            if self.preview:
+            if self.preview or self.enrollment.snapshot()['status'] in ACTIVE_STATES | {'approved'}:
                 return
             self.popover.close()
             panel = A.NSOpenPanel.openPanel()
@@ -331,7 +402,7 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
             except Exception as error:
                 self.alert('기기 키를 가져올 수 없습니다', str(error) if isinstance(error, ValueError) else '읽을 수 있는 MacLink JSON 파일을 선택하세요.')
                 return
-            details = tr('웹사이트: {site}\n기기: {name}\n\n이 웹사이트에 등록한 본인의 기기인지 확인하세요. 기존 키가 있으면 교체되며 현재 원격 세션은 종료됩니다. 일회용 초대는 Mac에서 연결 승인을 요청합니다.').format(site=config['site'], name=config['name'])
+            details = tr('웹사이트: {site}\n기기: {name}\n\n이 웹사이트에서 본인의 Google 계정에 등록한 기기인지 확인하세요. 같은 계정으로 로그인한 컴퓨터의 내 기기에서 연결할 수 있습니다. 기존 키가 있으면 교체되며 현재 원격 세션은 종료됩니다.').format(site=config['site'], name=config['name'])
             if not self.alert('이 기기 키를 사용하시겠습니까?', details, confirm=True):
                 return
             self.pendingConfig = config
@@ -400,6 +471,7 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
         def applicationShouldTerminate_(self, sender):
             self.quitting = True
             self.pendingConfig = None
+            self.enrollment.shutdown()
             if self.preview:
                 return A.NSTerminateNow
             self.controller.stop(restart=False)
@@ -416,6 +488,7 @@ def run_app(register_only=False, show_panel=False, preview_ui=False):
                      'openInput:', 'openLog:', 'quitApp:', 'applicationShouldTerminate:',
                      'applicationWillTerminate:', 'statusClicked:', 'showPanel:', 'panelTab:',
                      'supportDonation:', 'changeLanguage:', 'openGitHub:', 'checkVersion:',
+                     'connectGoogle:', 'cancelEnrollment:',
                      'applicationShouldHandleReopen:hasVisibleWindows:')
         if not all(MacLinkDelegate.instancesRespondToSelector_(name) for name in selectors):
             raise RuntimeError('The native menu delegate is missing a required action.')

@@ -5,14 +5,15 @@ export type LegalLanguage='ko'|'en';
 export const LEGAL_OPERATOR='오종현';
 export const LEGAL_EMAIL='taoss3932@gmail.com';
 export const LEGAL_EFFECTIVE_DATE='2026-10-17';
+export const LEGAL_UPDATED_DATE='2026-10-20';
 export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>={
   "privacy": {
     "ko": {
       "title": "개인정보 처리방침",
-      "subtitle": "MacLink가 어떤 정보를 처리하고, 화면과 입력을 어떻게 전달하는지 안내합니다.",
+      "subtitle": "MacLink가 계정·기기 정보와 원격 화면·소리·입력을 처리하는 방식을 안내합니다.",
       "summary": [
-        "화면과 원격 입력은 WebRTC 직접 연결 또는 암호화된 TURN 중계로 전달합니다. 웹사이트에 화면·입력을 업로드하거나 저장하지 않습니다.",
-        "이메일은 계정·기기 확인에 사용합니다. 광고 추적이나 AI 모델 학습 목적으로 사용하지 않습니다.",
+        "화면·시스템 오디오·원격 입력은 WebRTC 직접 연결 또는 암호화된 TURN 중계로 전달합니다. 서비스 서버에 미디어나 입력 내용을 저장하지 않습니다.",
+        "등록한 기기와 동일한 Google 계정으로 로그인해야 접속할 수 있습니다. 계정 정보는 광고 추적이나 AI 모델 학습에 사용하지 않습니다.",
         "기기 등록 해제와 계정 정보 삭제는 다릅니다. 계정 삭제는 아래 문의처로 요청할 수 있습니다."
       ],
       "sections": [
@@ -46,14 +47,19 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
                 "커넥터 인증, 기기 목록, 연결 가능 여부 확인"
               ],
               [
-                "초대·연결",
-                "초대·세션 ID, 비밀 값의 해시, 호스트 이메일의 검증용 해시, 권한·접속 상태·시각·종료 사유, 화질 설정, WebRTC 연결 정보(SDP/ICE에 포함될 수 있는 IP·포트)",
-                "초대 확인, 연결 협상, 접근 권한 회수, 재연결 및 장애 진단"
+                "기기 등록 승인",
+                "등록 요청 ID, Mac 이름, 확인 코드, 커넥터의 일시적 증명·기기 키 해시, 승인 계정·상태·시각, 요청 제한을 위한 네트워크 주소의 해시",
+                "브라우저에서 승인한 계정과 요청한 커넥터를 안전하게 연결하고 중복 요청·남용을 방지"
               ],
               [
-                "화면·원격 입력",
-                "선택한 화면, 마우스 좌표·클릭·휠, 키 이벤트, 텍스트 보내기로 제출한 내용",
-                "소유자가 허용한 화면 공유와 원격 조작 — 서비스 서버에 업로드하지 않고 WebRTC로 전달 — 서비스 서버에 업로드하지 않고 WebRTC로 전달"
+                "원격 연결",
+                "세션 ID, 세션 비밀 값의 해시, 소유 계정 및 로그인 세션 식별값, 권한·접속 상태·시각·종료 사유, 화질·오디오 상태, WebRTC 연결 정보(SDP/ICE에 포함될 수 있는 IP·포트)",
+                "같은 계정의 기기 소유권 확인, 연결 협상·철회·복구 및 장애 진단"
+              ],
+              [
+                "화면·시스템 오디오·원격 입력",
+                "선택한 화면, Mac의 시스템 소리, 마우스 좌표·클릭·휠, 키 이벤트, 텍스트 보내기로 제출한 내용. 마이크는 수집하지 않습니다.",
+                "같은 계정으로 로그인한 원격 컴퓨터에 화면·소리를 전달하고 허용한 입력을 실행 — 서비스 서버에 저장하지 않고 WebRTC로 전달"
               ],
               [
                 "선택적 TURN 설정",
@@ -74,17 +80,17 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "paragraphs": [
             "정보는 로그인 제공자의 인증 응답, 이용자의 등록·설정·문의, 커넥터 상태 보고, 원격 연결 및 브라우저·호스팅 서비스의 동작을 통해 처리합니다. 계정·기기 관리와 요청한 연결의 제공에 필요한 정보는 서비스 이용계약의 이행을 위해 처리합니다.",
             "동의가 필요한 선택 정보나 목적 외 처리는 해당 목적·항목·보유기간을 별도로 안내하고 필요한 동의를 받습니다. 보안·오남용 대응은 관련 법령이 허용하는 범위에서 필요한 최소 정보로 수행합니다.",
-            "로그인이나 필수 연결 정보 제공을 거부하면 기기 등록·원격 접속이 제한됩니다. 초대받은 접속자는 소유자 계정으로 로그인할 필요가 없습니다. TURN 키 등록과 문의 자료 제출은 선택 사항입니다."
+            "기기 등록과 원격 접속에는 Google 로그인이 필요합니다. 등록한 계정과 다른 계정이나 로그인하지 않은 브라우저에서는 기기에 접속할 수 없습니다. TURN 설정과 문의 자료 제출은 선택 사항입니다."
           ]
         },
         {
           "id": "transport",
-          "title": "4. 화면·입력의 전달과 임시 저장",
+          "title": "4. 화면·소리·입력의 전달",
           "paragraphs": [
-            "WebRTC 직접 연결에서는 화면과 입력을 암호화된 통신으로 호스트와 접속자 사이에 전달합니다. TURN을 이용하면 중계 제공자가 암호화된 패킷과 통신 메타데이터를 처리합니다.",
-            "화면·키보드·마우스·텍스트 보내기의 내용은 WebRTC 영상·데이터 채널로만 전달합니다. HTTPS 화면·입력 보조 중계는 제공하지 않으며 서비스 서버가 해당 내용을 받아 저장하는 API도 제공하지 않습니다. 웹사이트·로그인·권한 확인·연결 협상은 HTTPS로 보호합니다.",
-            "화면에 보이는 문서·알림·계정·민감정보도 접속자에게 보일 수 있습니다. 공유 전 불필요한 창과 알림을 닫고, 제3자의 정보를 공유할 권한을 확인하세요. 현재 오디오 송출, 전용 파일 전송 및 화면 녹화 기능은 제공하지 않습니다.",
-            "운영자는 원격 화면이나 입력을 광고, 판매, 이용자 프로파일링 또는 AI 모델 학습 목적으로 사용하지 않습니다. 장애·보안 조사나 법률상 의무를 위한 접근이 필요한 경우에도 필요한 범위와 적법한 근거로 제한합니다."
+            "WebRTC 직접 연결에서는 화면·시스템 소리·입력을 암호화하여 Mac과 같은 계정으로 로그인한 원격 브라우저 사이에 전달합니다. TURN을 이용하면 중계 제공자가 암호화된 패킷과 통신 메타데이터를 처리합니다.",
+            "화면은 WebRTC 미디어로, 시스템 소리는 WebRTC 오디오 미디어 또는 PCM 데이터 채널로, 키보드·마우스·텍스트 입력은 데이터 채널로 전달합니다. 웹사이트·로그인·권한 확인·연결 정보 교환에는 HTTPS를 사용합니다. 시스템 소리 전송에는 macOS 화면 및 시스템 오디오 기록 권한이 필요하며 마이크는 수집하지 않습니다.",
+            "화면에 보이는 문서·알림·계정·민감정보와 재생되는 시스템 소리가 원격 컴퓨터에 전달될 수 있습니다. 불필요한 창과 알림을 닫고 제3자의 정보를 처리할 권한을 확인하세요. 서비스는 전용 파일 전송이나 화면·소리 녹화·저장을 제공하지 않습니다.",
+            "운영자는 원격 화면·소리·입력을 광고, 판매, 사용자 프로파일링 또는 AI 모델 학습에 사용하지 않습니다. 지원·보안·법적 의무를 위한 처리는 필요한 범위와 적법한 근거에 한정합니다."
           ]
         },
         {
@@ -97,12 +103,16 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
             ],
             "rows": [
               [
-                "계정·이메일 검증 정보",
+                "계정 인증 정보",
                 "계정 이용 중 보유합니다. 계정 삭제 요청 처리 시 삭제하며, 기기 등록 해제만으로 계정·TURN 설정까지 모두 삭제되지는 않습니다."
               ],
               [
-                "기기·초대·연결 기록",
-                "기기 관리와 연결 복구를 위해 보유합니다. 기기 등록 해제 시 관련 초대·세션을 삭제합니다. 일회용 초대는 1시간 내 사용 가능하고, 상시 링크는 회수 전까지 유효합니다. 만료·사용된 초대의 저장 레코드는 후속 정리 시 삭제될 수 있습니다."
+                "기기·연결 기록",
+                "기기 관리와 연결 복구를 위해 보유합니다. 기기 등록 해제 시 관련 세션을 삭제합니다. 로그아웃·로그인 만료·접속 종료 시 해당 원격 연결 권한을 끝냅니다. 기존 초대 구조는 제거되어 초대 정보는 새로 저장하지 않습니다."
+              ],
+              [
+                "기기 등록 준비 정보",
+                "미승인 등록 요청은 10분 동안 유효하며, 승인된 결과는 같은 커넥터에서 최대 24시간 복구할 수 있습니다. 만료된 요청과 요청 제한 기록은 이후 등록 요청 처리 중 정리되어 유효기간과 실제 삭제 시점은 다를 수 있습니다."
               ],
               [
                 "Google 로그인 상태(해당 기능 이용 시)",
@@ -135,7 +145,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "id": "sharing",
           "title": "7. 접속자에게 공개되는 정보와 외부 서비스",
           "paragraphs": [
-            "소유자가 초대를 공유하면 초대받은 사람은 허용된 범위의 화면·기기 이름·연결 상태를 확인하고, 제어 권한이 있으면 기기를 조작할 수 있습니다. 호스트 이메일 확인은 추가 인증이나 2단계 인증이 아닙니다. 상시 링크를 공유한 경우 매번 소유자 승인을 받지 않을 수 있습니다.",
+            "등록한 기기에 접속하려면 같은 Google 계정으로 로그인해야 합니다. 로그인 세션과 기기 소유권을 서버에서 확인하고, 보기 전용 또는 제어 범위에 따라 화면·소리를 전달하고 입력을 허용합니다. 계정이나 연결 키를 다른 사람에게 공유하지 마세요.",
             "개인정보를 판매하거나 광고업체에 제공하지 않습니다. 요청한 연결·로그인·호스팅의 제공에 필요한 처리, 이용자가 별도로 동의한 처리, 법률상 의무에 따른 처리를 제외하고 목적 외 제3자 제공을 하지 않습니다."
           ],
           "table": {
@@ -211,8 +221,8 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "title": "11. 이용자의 권리와 행사 방법",
           "paragraphs": [
             "이용자와 법정대리인은 관련 법령에 따라 개인정보 열람·정정·삭제·처리정지, 동의 철회, 계정 삭제를 요청할 수 있습니다. taoss3932@gmail.com로 요청 종류와 확인 가능한 계정 정보를 보내주세요. 필요한 최소한의 본인 확인 후 법령에 따라 지체 없이 처리하고 결과 또는 제한 사유를 안내합니다.",
-            "비밀번호, 연결 키 원문, 초대 링크의 비밀 값, 신분증 전체 사본이나 민감한 화면을 공개 게시판에 올리지 마세요. 확인 자료가 더 필요하면 담당자가 안전한 제출 방법을 개별 안내합니다.",
-            "즉시 접근을 중단하려면 커넥터를 멈추고, 내 기기의 접속 권한을 회수하거나 등록을 해제하세요. 계정·모든 잔여 정보 삭제는 담당자에게 별도로 요청할 수 있습니다.",
+            "비밀번호, 연결 키 원문, 세션 토큰, 신분증 전체 사본이나 민감한 화면을 공개 게시판에 올리지 마세요. 확인 자료가 더 필요하면 담당자가 안전한 제출 방법을 개별 안내합니다.",
+            "즉시 접근을 중단하려면 원격 연결을 종료하거나 로그아웃하고, 필요하면 커넥터를 멈추거나 기기 등록을 해제하세요. 계정·잔여 정보 삭제는 담당자에게 별도로 요청할 수 있습니다.",
             "권리 침해에 관한 신고·상담이나 분쟁조정은 개인정보 포털의 공식 안내를 이용할 수 있습니다."
           ],
           "links": [
@@ -235,10 +245,10 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
     },
     "en": {
       "title": "Privacy Policy",
-      "subtitle": "How MacLink processes information and carries screen and remote input.",
+      "subtitle": "How MacLink processes account/device information and remote screens, system audio and input.",
       "summary": [
-        "Screens and remote input use direct WebRTC or encrypted TURN relaying. MacLink does not upload or store screen/input payloads on the website.",
-        "Email is used for account and device verification, not advertising profiles or AI model training.",
+        "Screens, system audio and remote input travel over direct WebRTC or encrypted TURN. Their contents are not stored on the service server.",
+        "Connecting requires signing in with the Google account that registered the device. Account information is not used for advertising tracking or AI model training.",
         "Removing a device is different from deleting an account. Contact the operator to request account deletion."
       ],
       "sections": [
@@ -272,14 +282,19 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
                 "Connector authentication and device availability"
               ],
               [
-                "Invitations and sessions",
-                "Invitation/session IDs, secret hashes, host-email verification hash, permissions, status/timestamps/end reasons, quality settings and WebRTC SDP/ICE information that may include IP addresses and ports",
-                "Invitation verification, connection negotiation, revocation, recovery and diagnostics"
+                "Device enrollment approval",
+                "Request ID, Mac name, confirmation code, hashes of temporary Connector proof and device credential, approving account/status/times, and a network-address hash for request limits",
+                "Bind the approving account to the requesting Connector and prevent duplicate requests and abuse"
               ],
               [
-                "Screens and remote input",
-                "The shared display, pointer coordinates/clicks/wheel, key events and text explicitly submitted",
-                "Authorized screen sharing and remote interaction"
+                "Remote connections",
+                "Session ID, session-secret hash, owner and login-session identifiers, permission/status/timestamps/reason, quality/audio status and WebRTC signaling (which can include IP addresses/ports in SDP/ICE)",
+                "Same-account ownership checks, connection negotiation, revocation, recovery and diagnostics"
+              ],
+              [
+                "Screens, system audio and remote input",
+                "Selected screen, Mac system sound, pointer coordinates/clicks/wheel, key events and Send text contents. The microphone is not captured.",
+                "Deliver screen/system sound to a computer signed in to the same account and execute authorized input over WebRTC without server storage"
               ],
               [
                 "Optional TURN configuration",
@@ -300,17 +315,17 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "paragraphs": [
             "Data comes from identity responses, user registration/settings/support requests, Connector status reports, remote connections and browser/hosting operations. Necessary account and connection processing supports the service requested by the user.",
             "Where consent is required for optional information or a new purpose, the relevant purpose, information and retention will be explained and the required consent obtained. Security and abuse prevention use the minimum necessary information within applicable law.",
-            "Declining required sign-in or connection information can prevent device registration or remote access. Invited visitors do not need an owner account. TURN configuration and support attachments are optional."
+            "Google sign-in is required for device registration and remote access. Signed-out browsers and different accounts cannot connect to the device. TURN configuration and support attachments are optional."
           ]
         },
         {
           "id": "transport",
-          "title": "4. Remote screen and input processing",
+          "title": "4. Remote screen, system audio and input",
           "paragraphs": [
-            "With direct WebRTC, encrypted communication carries screens and input between the host and visitor. With TURN, the relay provider processes encrypted packets and connection metadata.",
-            "Screens and keyboard, pointer and text-send contents travel only over WebRTC media/data channels. No HTTPS screen/input fallback or server API that accepts and stores these payloads is provided. HTTPS protects the website, sign-in, authorization and connection signaling.",
-            "Documents, notifications, accounts and sensitive information visible on the shared screen may be seen by the visitor. Close unnecessary windows and confirm your authority to share others’ information. Audio streaming, dedicated file transfer and screen recording are not currently provided.",
-            "The operator does not use remote screens or input for advertising, sale, user profiling or AI model training. Any access needed for support, security or legal obligations is limited to a necessary scope and lawful basis."
+            "Direct WebRTC encrypts screens, system sound and input between the Mac and a remote browser signed in to the same account. TURN providers process encrypted packets and connection metadata.",
+            "Screens travel as WebRTC media; system sound uses WebRTC audio media or a PCM data channel, and keyboard/pointer/text input uses a data channel. HTTPS protects the website, sign-in, authorization and signaling. System sound requires macOS Screen & System Audio Recording permission; the microphone is not captured.",
+            "Visible documents, notifications, accounts and sensitive information, as well as system sound, can reach the remote computer. Close unnecessary windows and confirm authority to process others’ information. The service does not provide dedicated file transfer or record/store screen or sound.",
+            "The operator does not use remote screens, sound or input for advertising, sale, profiling or AI model training. Support, security and legal processing is limited to necessary scope and lawful grounds."
           ]
         },
         {
@@ -323,12 +338,16 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
             ],
             "rows": [
               [
-                "Account and email verification data",
+                "Account identity information",
                 "Retained while the account is used and deleted when an account-deletion request is processed. Device removal does not by itself remove all account or TURN data."
               ],
               [
-                "Devices, invitations and sessions",
-                "Retained for device management and recovery. Device removal deletes its related invitations/sessions. Single-use invitations are usable for one hour; reusable links remain valid until revoked. Expired or used invitation records may be removed during later cleanup."
+                "Devices and connections",
+                "Retained for device management and recovery. Device removal deletes related sessions. Sign-out, login expiry and ending access revoke the corresponding remote connection. The invitation structure has been removed and new invitation records are not stored."
+              ],
+              [
+                "Device enrollment preparation",
+                "Pending approvals are valid for ten minutes. The same Connector can recover approved results for up to 24 hours. Expired requests and request-limit records are cleaned during later enrollment requests, so validity and physical deletion can differ."
               ],
               [
                 "Google sign-in, when used",
@@ -361,7 +380,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "id": "sharing",
           "title": "7. Visitors and service providers",
           "paragraphs": [
-            "When an owner shares an invitation, the invited visitor can see the authorized screen, device name and connection state, and can operate the device if control is permitted. Knowing the host email is not a second authentication factor. A reusable invitation may allow connections without approval each time.",
+            "Access requires the Google account that registered the device. The server checks the live login session and device ownership, then permits screen/sound and input according to view-only or control mode. Do not share your account or Connector key.",
             "MacLink does not sell personal data or provide it to advertisers. Disclosure is limited to requested connectivity/authentication/hosting, separately authorized purposes and legal obligations."
           ],
           "table": {
@@ -437,8 +456,8 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "title": "11. Your rights",
           "paragraphs": [
             "Users and legal representatives can request access, correction, deletion, restriction, consent withdrawal or account deletion as provided by applicable law. Email taoss3932@gmail.com with the request and sufficient account information. After minimum necessary identity verification, we respond without undue delay as required by law and explain any limitation.",
-            "Do not post passwords, raw connector keys, secret invitation values, full identity documents or sensitive screens in public issues. If further evidence is required, the contact will explain an appropriate submission method.",
-            "To stop access immediately, stop the Connector, revoke invitations or remove the device. Request account and residual information deletion separately from the privacy contact.",
+            "Do not post passwords, raw Connector keys, session tokens, full identity documents or sensitive screens in public issues. If more evidence is required, the contact will explain a safe submission method.",
+            "To stop access, end the remote connection or sign out; stop the Connector or remove the device when necessary. Request account and residual data deletion separately from the privacy contact.",
             "The Korean Privacy Portal provides official information about privacy complaints and dispute resolution."
           ],
           "links": [
@@ -463,10 +482,10 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
   "terms": {
     "ko": {
       "title": "서비스 약관",
-      "subtitle": "내 기기를 연결하고 다른 사람을 초대할 때 지켜야 할 이용 조건입니다.",
+      "subtitle": "Google 계정에 등록한 내 Mac에 원격 접속할 때 지켜야 할 이용 조건입니다.",
       "summary": [
         "자신의 기기 또는 명시적으로 권한을 받은 기기에만 접속하세요.",
-        "상시 초대 링크는 반복 접속 권한입니다. 링크와 연결 키를 비밀로 보관하세요.",
+        "등록한 기기는 같은 Google 계정으로 로그인한 브라우저에서만 접속할 수 있습니다. 계정과 연결 키를 안전하게 보관하세요.",
         "현재 서비스는 무료이며 PayPal 결제와 후원 결제는 지원하지 않습니다."
       ],
       "sections": [
@@ -475,7 +494,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "title": "1. 목적과 운영자",
           "paragraphs": [
             "이 약관은 오종현(이하 “운영자”)이 제공하는 MacLink 웹사이트와 커넥터를 통한 원격 화면 공유·기기 제어 서비스의 이용 조건을 정합니다. 서비스 주소는 https://www.maclink.cloud이며 문의처는 taoss3932@gmail.com입니다.",
-            "“소유자”는 기기를 등록하고 접근을 허용하는 사람, “접속자”는 초대를 통해 해당 기기에 접속하는 사람입니다. 운영자와 이용자는 적용되는 법령 및 이 약관을 준수합니다."
+            "“소유자”는 관리 권한이 있는 기기를 자신의 Google 계정에 등록한 사람이며, 원격 접속은 같은 계정으로 로그인한 컴퓨터에서 이루어집니다. 운영자와 이용자는 적용되는 법령 및 이 약관을 준수합니다."
           ]
         },
         {
@@ -483,25 +502,25 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "title": "2. 이용과 계정",
           "paragraphs": [
             "서비스는 만 14세 이상을 대상으로 합니다. 미성년자가 법률상 필요한 법정대리인 동의를 받아야 하는 경우에는 이를 갖추어야 합니다. 이용계약의 성립과 중요한 동의는 서비스에서 제공하는 명시적 신청·동의 절차에 따릅니다.",
-            "소유자는 로그인 화면에 제공되는 계정 인증을 이용하고, 관리 권한이 있는 기기만 등록해야 합니다. 허위 신원, 타인의 계정·기기·연결 키를 이용한 등록을 해서는 안 됩니다. 초대받은 접속자는 별도 소유자 계정 없이 접속할 수 있습니다.",
-            "계정 인증 정보, 다운로드한 연결 키, 초대 링크와 세션 정보는 안전하게 보관하세요. 유출이 의심되면 즉시 접속 권한을 회수하고 필요한 경우 기기를 다시 등록하세요. 이용자에게 책임이 없는 사고까지 이용자에게 일괄 전가하지 않습니다."
+            "기기 등록과 접속에는 Google 로그인이 필요하며, 관리 권한이 있는 기기만 등록해야 합니다. 허위 신원, 타인의 계정·기기·연결 키를 이용해서는 안 됩니다. 공개 링크나 이메일 주소만으로 접속할 수 없습니다.",
+            "계정 인증 정보, 커넥터에 저장된 기기 키와 세션 정보는 안전하게 보관하세요. 유출이 의심되면 연결을 종료하고 로그아웃한 뒤 필요한 경우 기기를 다시 등록하세요. 이용자에게 책임이 없는 사고까지 일괄 전가하지 않습니다."
           ]
         },
         {
           "id": "service",
           "title": "3. 제공 기능과 이용 환경",
           "paragraphs": [
-            "MacLink는 켜져 있는 Mac의 화면 공유와 허용된 키보드·마우스 제어를 제공합니다. WebRTC 직접 연결과 선택적 TURN 중계를 사용합니다. 두 경로가 모두 차단되면 연결되지 않습니다. 웹사이트·로그인·API는 HTTPS를 사용합니다.",
-            "현재 기본 디스플레이 한 대와 동시 접속자 한 명을 지원합니다. 오디오 송출, 전용 파일 전송, 잠자기 중 깨우기, 부팅 전 FileVault·로그인 화면 제어 등은 제공하거나 보장하지 않습니다.",
+            "MacLink는 온라인 Mac의 화면·시스템 소리와 허용된 키보드·포인터 제어를 직접 WebRTC 또는 선택적 TURN으로 전달합니다. 두 경로가 모두 막힌 네트워크에서는 연결되지 않습니다. 웹사이트·로그인·API는 HTTPS를 사용합니다.",
+            "현재 주 디스플레이 한 대와 동시 원격 연결 한 개를 지원합니다. 시스템 소리에는 지원되는 커넥터와 macOS 권한이 필요하며 마이크는 전송하지 않습니다. 전용 파일 전송, 잠자기 중 깨우기, 부팅 전 FileVault·로그인 화면 제어는 제공하거나 보장하지 않습니다.",
             "소유자는 필요한 macOS 권한을 직접 허용하고 인터넷·전원·잠자기 설정을 관리해야 합니다. 실제 해상도·프레임 수·지연·연결 성공은 Mac 성능, 네트워크, 브라우저 및 중계 제공자의 상태에 영향을 받습니다."
           ]
         },
         {
           "id": "permission",
-          "title": "4. 원격 접속 권한과 공유 책임",
+          "title": "4. 계정 기반 접속과 권한",
           "paragraphs": [
-            "소유자는 보기 전용 또는 제어 권한을 선택하고, 허용할 사람에게만 초대를 전달해야 합니다. 일회용 초대는 유효기간·승인 조건에 따르며, 상시 링크는 회수 전까지 반복 접속 권한을 부여할 수 있습니다. 매 연결마다 별도 승인을 받는다고 가정하지 마세요.",
-            "호스트 이메일 확인은 추가 인증이나 2단계 인증이 아닙니다. 링크·이메일·연결 키를 공개 게시하거나 신뢰할 수 없는 사람에게 보내지 마세요. 권한을 받은 접속자도 허용 목적·범위를 넘어 기기나 정보에 접근해서는 안 됩니다.",
+            "다른 컴퓨터에서 같은 Google 계정으로 로그인한 뒤 내 기기의 접속 버튼을 사용합니다. 서버는 기기 소유권과 유효한 로그인 세션을 확인합니다. 초대 링크 발급이나 로그인하지 않은 접속은 제공하지 않습니다.",
+            "보기 전용 또는 제어 범위를 선택할 수 있습니다. 계정·연결 키·세션 비밀값을 공개하거나 다른 사람에게 공유하지 마세요. 로그아웃 또는 로그인 세션 만료 시 해당 로그인에 묶인 원격 연결도 종료됩니다.",
             "제3자의 문서·개인정보·업무 자료를 공유할 때에는 필요한 권한과 법적 근거를 갖추고, 불필요한 창과 알림을 닫으세요. 접속자의 복사·별도 촬영·저장을 기술적으로 모두 막을 수는 없습니다."
           ]
         },
@@ -509,7 +528,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "id": "prohibited",
           "title": "5. 금지 행위",
           "bullets": [
-            "권한 없는 기기 접속, 도용한 계정·연결 키·초대의 사용, 권한 확인 우회 또는 접근 권한 확대",
+            "권한 없는 기기 접속, 도용한 계정·연결 키·세션의 사용, 권한 확인 우회 또는 접근 권한 확대",
             "동의 없는 감시·스토킹·사생활 침해, 사기, 악성코드 배포, 불법 자료 처리, 타인의 권리 침해",
             "기기의 파일·데이터를 허락 없이 열람·변경·삭제하거나 접속을 방해하는 행위",
             "과도한 자동 요청, 서비스 거부 공격, 비밀 값 추측, 서비스의 정상 운영과 보안을 해치는 행위",
@@ -556,7 +575,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "id": "end",
           "title": "9. 중단·탈퇴·이용 제한",
           "paragraphs": [
-            "접속자는 연결을 종료할 수 있고, 소유자는 커넥터 중지, 초대 권한 회수 또는 기기 등록 해제로 접근을 차단할 수 있습니다. 계정·잔여 정보 삭제는 운영자에게 요청할 수 있습니다. 연결 중지나 앱 제거만으로 모든 계정 정보가 삭제되는 것은 아닙니다.",
+            "원격 연결을 종료하거나 로그아웃할 수 있고, 소유자는 커넥터 중지 또는 기기 등록 해제로 접근을 차단할 수 있습니다. 계정·잔여 정보 삭제는 운영자에게 요청할 수 있습니다. 연결 중지나 앱 제거만으로 모든 계정 정보가 삭제되는 것은 아닙니다.",
             "법령 위반, 권한 없는 접근, 명백한 보안 위험 또는 운영 방해가 확인되면 필요한 범위에서 해당 연결이나 계정 이용을 제한할 수 있습니다. 긴급 조치가 필요한 경우를 제외하고 사유를 안내하며, 이용자는 문의처를 통해 이의를 제기할 수 있습니다.",
             "점검·장애·외부 서비스 문제·보안 대응으로 서비스가 일시 중단될 수 있습니다. 예정된 중요한 변경·종료는 가능한 한 사전에 이유와 영향을 안내하고, 긴급 중단은 사후 지체 없이 알립니다. 정당한 사유 없이 이용자에게 부당한 불이익을 주는 중단은 하지 않습니다."
           ]
@@ -591,10 +610,10 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
     },
     "en": {
       "title": "Terms of Service",
-      "subtitle": "Conditions for connecting your Mac and inviting another person to access it.",
+      "subtitle": "Conditions for remotely accessing your registered Mac through your Google account.",
       "summary": [
         "Access only devices you own or are expressly authorized to access.",
-        "Reusable invitations grant repeat access. Keep invitation links and connector keys secret.",
+        "Only browsers signed in to the Google account that registered a device may connect to it. Protect your account and Connector keys.",
         "The service is currently free. PayPal payments and paid donations are not enabled."
       ],
       "sections": [
@@ -603,7 +622,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "title": "1. Service and operator",
           "paragraphs": [
             "These terms govern the remote screen-sharing and device-control service provided through the MacLink website and Connector by 오종현 (the “operator”). The service is at https://www.maclink.cloud. Contact: taoss3932@gmail.com.",
-            "An “owner” registers a device and authorizes access. A “visitor” connects through an invitation. The operator and users must comply with applicable law and these terms."
+            "An “owner” registers a device they are authorized to manage to their Google account. Remote access is from a computer signed in to that same account. The operator and users must follow applicable law and these terms."
           ]
         },
         {
@@ -611,25 +630,25 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "title": "2. Eligibility and accounts",
           "paragraphs": [
             "The service is intended for users aged 14 or older. A minor must obtain any legal-representative consent required by applicable law. Contract formation and important consents follow explicit application/consent processes provided by the service.",
-            "Owners use the identity provider offered on the sign-in screen and may register only devices they are authorized to manage. False identities, another person’s account or stolen device keys must not be used. Invited visitors do not need a separate owner account.",
-            "Protect account credentials, downloaded keys, invitations and session information. If exposure is suspected, revoke access and re-register the device when necessary. These terms do not shift liability for incidents outside a user’s responsibility onto that user."
+            "Google sign-in is required for registration and access. Register only devices you are authorized to manage. Do not use false identities, others’ accounts/devices or stolen keys. A public link or email address alone does not grant access.",
+            "Protect account credentials, locally stored Connector keys and session information. If exposed, end access and sign out, then re-register the device if necessary. Liability for incidents outside a user’s responsibility is not shifted onto that user."
           ]
         },
         {
           "id": "service",
           "title": "3. Features and requirements",
           "paragraphs": [
-            "MacLink shares the screen and authorized keyboard/pointer control of an online Mac over direct WebRTC or optional TURN. Connections fail where both paths are blocked. The website, sign-in and API use HTTPS.",
-            "The service currently supports one primary display and one concurrent visitor per Mac. Audio streaming, dedicated file transfer, waking sleeping Macs and pre-boot FileVault/login-screen control are not provided or guaranteed.",
+            "MacLink carries an online Mac’s screen, system sound and authorized keyboard/pointer control over direct WebRTC or optional TURN. Connections fail when both paths are blocked. The website, sign-in and API use HTTPS.",
+            "One primary display and one concurrent connection per Mac are supported. System sound requires a supporting Connector and macOS permissions; the microphone is not transmitted. Dedicated file transfer, waking sleeping Macs and pre-boot FileVault/login-screen control are not provided or guaranteed.",
             "Owners manage macOS permissions, connectivity, power and sleep settings. Actual resolution, frame rate, latency and connection success depend on hardware, networks, browsers and relay availability."
           ]
         },
         {
           "id": "permission",
-          "title": "4. Invitations and authority",
+          "title": "4. Account-based access and authority",
           "paragraphs": [
-            "Owners choose view-only or control permissions and share invitations only with authorized people. Single-use invitations follow their expiry/approval conditions. Reusable links can authorize repeat access until revoked; do not assume that each connection needs a fresh approval.",
-            "Host-email verification is not a second authentication factor. Do not publish secret links or keys or share them with untrusted people. Visitors must remain within the authorized purpose and scope.",
+            "Sign in to the same Google account on another computer and use Connect under My devices. The server checks device ownership and the live login session. Invitation issuance and signed-out access are not provided.",
+            "Choose view-only or control mode. Do not publish or share accounts, Connector keys or session secrets. Signing out or login-session expiry also ends remote connections bound to that login.",
             "Before sharing others’ documents, personal information or work materials, obtain the necessary authority and lawful basis and close unnecessary windows/notifications. MacLink cannot prevent every copy, independent recording or capture by an authorized visitor."
           ]
         },
@@ -637,7 +656,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "id": "prohibited",
           "title": "5. Prohibited use",
           "bullets": [
-            "Unauthorized device access, stolen credentials/invitations, bypassing authorization or escalating permissions",
+            "Unauthorized device access, stolen accounts/Connector keys/session secrets, bypassing authorization or escalating permissions",
             "Non-consensual surveillance, stalking, privacy violations, fraud, malware, unlawful materials or infringement of others’ rights",
             "Viewing, altering or deleting device information without permission or disrupting authorized access",
             "Abusive automation, denial-of-service attacks, secret guessing or interference with service security and operation",
@@ -684,7 +703,7 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
           "id": "end",
           "title": "9. Ending access and service restrictions",
           "paragraphs": [
-            "Visitors may end a connection. Owners may stop the Connector, revoke invitations or remove a device. Ask the operator to delete the account and residual information. Stopping or uninstalling the app does not itself delete all account data.",
+            "End a connection or sign out; owners may stop the Connector or remove the device to block access. Request account and residual data deletion from the operator. Stopping or uninstalling the app does not itself delete all account data.",
             "A connection or account may be restricted to the extent necessary for unlawful access, clear security risk or operational abuse. Reasons are provided unless urgent action is necessary; users may challenge the action through the contact address.",
             "Maintenance, outages, provider failures or security response can interrupt service. Planned material changes/closure are announced with reasons and effects as early as reasonably possible; urgent interruptions are explained without undue delay afterwards. Restrictions must not unfairly disadvantage users without a valid reason."
           ]
