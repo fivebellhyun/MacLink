@@ -18,10 +18,10 @@ export function pcmSignal(value:unknown):'pcm-f32le'|'opus'{
 }
 type AudioEnvironment={AudioContext?:typeof AudioContext;webkitAudioContext?:typeof AudioContext;AudioWorkletNode?:typeof AudioWorkletNode;isSecureContext?:boolean};
 export function supportsPcmAudio(environment:AudioEnvironment=globalThis):boolean{const Context=environment.AudioContext||environment.webkitAudioContext;return environment.isSecureContext!==false&&!!Context&&'audioWorklet' in Context.prototype&&typeof environment.AudioWorkletNode==='function';}
-type PcmCallbacks={beforePlay:()=>boolean;onPlaying:()=>void;onFailure:(reason:'blocked'|'unavailable'|'invalid'|'timeout'|'underrun')=>void};
+type PcmCallbacks={beforePlay:()=>boolean;onPlaying:()=>void;onBuffering?:()=>void;onFailure:(reason:'blocked'|'unavailable'|'invalid'|'timeout'|'starvation'|'backlog')=>void};
 /** One peer's PCM output. Create/resume it only from the sound button gesture. */
 export class PcmAudioPlayer{
- private context:AudioContext|null=null;private node:AudioWorkletNode|null=null;private revision=0;private sequence:number|null=null;private inTransit=0;private deadline=0;
+ private context:AudioContext|null=null;private node:AudioWorkletNode|null=null;private revision=0;private sequence:number|null=null;private inTransit=0;private deadline=0;private refillDeadline=0;
  prepared=false;ownsOutput=false;
  private readonly callbacks:PcmCallbacks;private readonly environment:AudioEnvironment;
  constructor(callbacks:PcmCallbacks,environment:AudioEnvironment=globalThis){this.callbacks=callbacks;this.environment=environment;}
@@ -40,9 +40,9 @@ export class PcmAudioPlayer{
    node.port.onmessage=event=>{
     if(revision!==this.revision||this.node!==node)return;const message=event.data;
     if(message?.type==='received'&&Number.isInteger(message.frames)&&message.frames>0&&message.frames<=PCM_MAX_FRAMES){this.inTransit=Math.max(0,this.inTransit-message.frames);return;}
-    if(message?.type==='buffered'){if(!this.callbacks.beforePlay()){this.fail('unavailable');return;}this.ownsOutput=true;node.port.postMessage({type:'activate'});}
-    else if(message?.type==='playing')this.callbacks.onPlaying();
-    else if(message?.type==='underrun')this.fail('underrun');
+    if(message?.type==='buffered'){const allowed=this.callbacks.beforePlay();if(revision!==this.revision||this.node!==node||!this.prepared)return;if(!allowed){this.fail('unavailable');return;}this.ownsOutput=true;node.port.postMessage({type:'activate'});}
+    else if(message?.type==='playing'){this.refillDeadline=0;this.callbacks.onPlaying();}
+    else if(message?.type==='buffering')this.buffering();
     else if(message?.type==='error')this.fail('invalid');
    };
    context.onstatechange=()=>{if(revision===this.revision&&this.prepared&&context.state!=='running')this.fail('blocked');};
@@ -50,17 +50,20 @@ export class PcmAudioPlayer{
   }catch(error){if(revision===this.revision)this.fail((error as Error).message==='blocked'||(error as Error).name==='NotAllowedError'?'blocked':'unavailable');}
  }
  expectPackets(now=Date.now()){if(this.prepared&&!this.deadline)this.deadline=now+1500;}
+ private buffering(now=Date.now()){if(this.refillDeadline)return;this.refillDeadline=now+2000;this.callbacks.onBuffering?.();}
+ /** Keep the gesture-authorized context and output ownership during a sender pause. */
+ rebuffer(now=Date.now()){const node=this.node,revision=this.revision;if(!this.prepared||!node)return;this.buffering(now);if(revision!==this.revision||this.node!==node||!this.prepared)return;this.expectPackets(now);node.port.postMessage({type:'rebuffer'});}
  receive(value:unknown,now=Date.now()){
   if(!this.prepared||!this.node)return;
   try{const packet=decodePcmPacket(value,this.sequence);if(!packet)return;this.sequence=packet.sequence;this.deadline=now+1500;
-   if(this.inTransit+packet.frames>12000)throw new Error('pcm-backlog');this.inTransit+=packet.frames;
+   if(this.inTransit+packet.frames>12000){this.fail('backlog');return;}this.inTransit+=packet.frames;
    this.node.port.postMessage({type:'samples',frames:packet.frames,samples:packet.samples,gap:packet.gap},[packet.samples.buffer]);
   }catch{this.fail('invalid');}
  }
- watchdog(now=Date.now()){if(this.prepared&&this.deadline&&now>this.deadline)this.fail('timeout');}
+ watchdog(now=Date.now()){if(!this.prepared)return;if(this.deadline&&now>this.deadline)this.fail('timeout');else if(this.refillDeadline&&now>this.refillDeadline)this.fail('starvation');}
  private fail(reason:Parameters<PcmCallbacks['onFailure']>[0]){this.close();this.callbacks.onFailure(reason);}
  close(){
-  ++this.revision;this.prepared=false;this.ownsOutput=false;this.sequence=null;this.inTransit=0;this.deadline=0;
+  ++this.revision;this.prepared=false;this.ownsOutput=false;this.sequence=null;this.inTransit=0;this.deadline=0;this.refillDeadline=0;
   const node=this.node;this.node=null;if(node){node.port.onmessage=null;node.onprocessorerror=null;try{node.port.postMessage({type:'stop'});node.disconnect();node.port.close();}catch{}}
   const context=this.context;this.context=null;if(context){context.onstatechange=null;if(context.state!=='closed')try{void context.close().catch(()=>{});}catch{}}
  }

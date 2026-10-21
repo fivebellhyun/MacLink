@@ -60,16 +60,16 @@ class SystemAudioTrack(AudioStreamTrack):
  """20 ms stereo audio with a bounded queue and the screen's permission lease."""
  rate=48000
  samples=960
- def __init__(self,gate=None,capture_factory=None,status=None,pcm=None):
+ def __init__(self,gate=None,capture_factory=None,status=None,pcm=None,clock=None,sleep=None):
   super().__init__()
   if capture_factory is None:
    from system_audio import ScreenAudioCapture
    capture_factory=ScreenAudioCapture
   self.gate=gate or (lambda:True);self.factory=capture_factory;self.status=status or (lambda available,error:None)
-  self.pcm=pcm
+  self.pcm=pcm;self.clock=clock or time.monotonic;self.sleep=sleep or asyncio.sleep
   self.loop=asyncio.get_running_loop();self.changed=asyncio.Event();self.lock=threading.Lock();self.queue=deque(maxlen=5)
   self.capture=None;self.starting=None;self.started=False;self.failed=False;self.paused=False;self.revision=0;self.notified=False
-  self.resampler=AudioResampler(format='s16',layout='stereo',rate=self.rate);self.fifo=AudioFifo();self.pcm_fifo=AudioFifo();self.fifo_at=0;self.pts=0;self.origin=time.monotonic();self.last=None
+  self.resampler=AudioResampler(format='s16',layout='stereo',rate=self.rate);self.fifo=AudioFifo();self.pcm_fifo=AudioFifo();self.fifo_at=0;self.pts=0;self.origin=self.clock();self.last=None;self.deadline=None
  def permitted(self):return self.readyState=='live' and not self.paused and self.gate()
  def _wake(self):
   self.notified=False;self.changed.set()
@@ -77,7 +77,7 @@ class SystemAudioTrack(AudioStreamTrack):
   if not self.permitted() or frame.samples>4800 or (revision is not None and revision!=self.revision):return
   with self.lock:
    if not self.permitted() or (revision is not None and revision!=self.revision):return
-   self.queue.append((self.revision,time.monotonic(),frame))
+   self.queue.append((self.revision,self.clock(),frame))
    while sum(item[2].samples for item in self.queue)>4800:self.queue.popleft()
    if not self.notified:
     self.notified=True
@@ -85,6 +85,7 @@ class SystemAudioTrack(AudioStreamTrack):
  def _flush(self):
   with self.lock:self.queue.clear()
   self.fifo=AudioFifo();self.pcm_fifo=AudioFifo();self.resampler=AudioResampler(format='s16',layout='stereo',rate=self.rate)
+  self.last=None;self.deadline=None
  def _twenty_ms(self,fifo,format):
   partial=fifo.read(self.samples,partial=True) if fifo.samples else None
   if partial is not None and partial.samples==self.samples:return partial
@@ -138,14 +139,27 @@ class SystemAudioTrack(AudioStreamTrack):
     finally:self.starting=None
    if self.failed:await self._wait();continue
    revision=self.revision
-   await asyncio.sleep(0 if self.last is None else max(0,self.last+.02-time.monotonic()))
+   # Pace against a sample deadline, not the previous actual return. Otherwise
+   # scheduler jitter plus conversion/encoding work slows the 48 kHz producer
+   # on every frame until the browser's playback buffer inevitably runs dry.
+   now=self.clock();interval=self.samples/self.rate
+   deadline=now if self.deadline is None else self.deadline
+   if now-deadline>.1:
+    self._flush();deadline=now
+   # Brief stalls may recover, but never emit more than one frame per 10 ms.
+   target=max(deadline,self.last+interval/2) if self.last is not None else deadline
+   await self.sleep(max(0,target-now))
    if revision!=self.revision or not self.permitted():continue
-   if time.monotonic()-self.fifo_at>.15:self.fifo=AudioFifo();self.pcm_fifo=AudioFifo()
+   now=self.clock()
+   if now-deadline>.1:
+    self._flush();deadline=now
+   self.deadline=deadline+interval
+   if now-self.fifo_at>.15:self.fifo=AudioFifo();self.pcm_fifo=AudioFifo()
    while self.fifo.samples<self.samples:
     with self.lock:item=self.queue.popleft() if self.queue else None
     if item is None:break
     captured_revision,captured_at,frame=item
-    if captured_revision!=revision or time.monotonic()-captured_at>.15:continue
+    if captured_revision!=revision or self.clock()-captured_at>.15:continue
     frame.pts=None
     if self.pcm:self.pcm_fifo.write(frame)
     for converted in self.resampler.resample(frame):
@@ -158,7 +172,7 @@ class SystemAudioTrack(AudioStreamTrack):
     try:self.pcm(self._twenty_ms(self.pcm_fifo,'fltp'))
     except Exception:pass
    frame=self._twenty_ms(self.fifo,'s16')
-   now=time.monotonic();self.last=now
+   now=self.clock();self.last=now
    self.pts=max(self.pts,int((now-self.origin)*self.rate))
    frame.pts=self.pts;frame.time_base=Fraction(1,self.rate);self.pts+=self.samples
    return frame
