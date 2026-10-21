@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync,readdirSync} from 'node:fs';
-import {getGoogleUser,handleGoogleAuth} from '../lib/google-auth.ts';
+import {getGoogleUser,getGoogleSession,handleGoogleAuth} from '../lib/google-auth.ts';
 
 const ORIGIN='https://www.maclink.example';
 const CLIENT='maclink-test.apps.googleusercontent.com';
@@ -18,6 +18,13 @@ function harness(){
  const req=(path,options={})=>new Request(ORIGIN+path,options);
  return {sqlite,env,req,call:(path,options)=>handleGoogleAuth(req(path,options),env)};
 }
+async function remoteSession(h,cookie,id='synthetic-remote'){
+ const now=Date.now(),owner='google:test-google-subject',device='synthetic-device-'+id;
+ h.sqlite.prepare('INSERT INTO devices (id,owner,name,agent_hash,created,seen,enabled,info) VALUES (?,?,?,?,?,?,1,?)').run(device,owner,'Test Mac','synthetic-agent-hash',now,now,'{}');
+ h.sqlite.prepare('INSERT INTO sessions (id,device,owner,auth_session_hash,guest_hash,guest_name,mode,status,offer,answer,created,expires,seen,generation) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0)').run(id,device,owner,await sha(cookie.split('=')[1]),'synthetic-viewer-hash','Device owner','control','active','v=0 offer','v=0 answer',now,0,now);
+ return id;
+}
+
 function cookies(response){return response.headers.getSetCookie().map(value=>value.split(';')[0]);}
 async function begin(h,returnPath='/hosts?from=google'){
  const response=await h.call('/auth/google?return_to='+encodeURIComponent(returnPath));assert.equal(response.status,303);
@@ -72,6 +79,7 @@ test('a signed synthetic Google response creates an opaque revocable session key
  const row=h.sqlite.prepare('SELECT * FROM auth_sessions').get();assert.equal(row.token_hash,await sha(token));assert.notEqual(row.token_hash,token);assert.equal(row.user_id,'google:test-google-subject');
  const user=await getGoogleUser(h.req('/api/devices',{headers:{cookie:sessionCookie}}),h.env);
  assert.deepEqual(user,{userId:'google:test-google-subject',email:'maclink.user@example.com',fullName:'MacLink User',displayName:'MacLink User'});
+ const browser=await getGoogleSession(h.req('/api/devices',{headers:{cookie:sessionCookie}}),h.env);assert.deepEqual(browser,{...user,sessionHash:row.token_hash});assert.equal('sessionHash' in user,false);
  assert.equal(h.sqlite.prepare('SELECT COUNT(*) AS n FROM auth_transactions').get().n,0);
  const serialized=JSON.stringify(h.sqlite.prepare('SELECT * FROM auth_users').get())+JSON.stringify(row);
  assert.equal(serialized.includes('synthetic-access-token'),false);assert.equal(serialized.includes('synthetic-test-secret'),false);
@@ -120,21 +128,26 @@ test('parallel callbacks consume state once before the first token exchange fini
 
 test('session rotation revokes the old token while a changed Google email retains the same identity',async t=>{
  const h=harness(),one=await begin(h);await provider(t,one);const first=await handleGoogleAuth(callback(h,one),h.env);const old=cookies(first).find(v=>v.startsWith(COOKIE+'='));t.mock.restoreAll();
+ await remoteSession(h,old);
  const two=await begin(h);await provider(t,two,{claims:{email:'changed@example.com',name:undefined}});const req=callback(h,two);const headers=new Headers(req.headers);headers.append('cookie',old);
  const second=await handleGoogleAuth(new Request(req.url,{headers}),h.env);assert.equal(second.status,303);const fresh=cookies(second).find(v=>v.startsWith(COOKIE+'='));assert.notEqual(old,fresh);
  assert.equal(await getGoogleUser(h.req('/api/me',{headers:{cookie:old}}),h.env),null);
  assert.deepEqual(await getGoogleUser(h.req('/api/me',{headers:{cookie:fresh}}),h.env),{userId:'google:test-google-subject',email:'changed@example.com',displayName:'changed@example.com',fullName:null});
  assert.equal(h.sqlite.prepare('SELECT COUNT(*) AS n FROM auth_users').get().n,1);assert.equal(h.sqlite.prepare('SELECT COUNT(*) AS n FROM auth_sessions').get().n,1);
+ const remote=h.sqlite.prepare('SELECT status,offer,answer,generation FROM sessions').get();assert.equal(remote.status,'ended');assert.equal(remote.offer,'');assert.equal(remote.answer,null);assert.equal(remote.generation,1);
 });
 
 test('signout requires same-origin POST and revokes the server session',async t=>{
- const h=harness(),login=await begin(h);await provider(t,login);const signed=await handleGoogleAuth(callback(h,login),h.env);const session=cookies(signed).find(v=>v.startsWith(COOKIE+'='));
+ const h=harness(),login=await begin(h);await provider(t,login);const signed=await handleGoogleAuth(callback(h,login),h.env);const session=cookies(signed).find(v=>v.startsWith(COOKIE+'='));await remoteSession(h,session);
  assert.equal((await h.call('/auth/signout',{headers:{cookie:session}})).status,405);
  for(const origin of [undefined,'https://attacker.example','null'])assert.equal((await h.call('/auth/signout',{method:'POST',headers:{cookie:session,...(origin?{origin}:{})}})).status,403);
  assert.equal((await h.call('/auth/signout',{method:'POST',headers:{cookie:session,origin:ORIGIN,'sec-fetch-site':'cross-site'}})).status,403);
  assert.ok(await getGoogleUser(h.req('/api/me',{headers:{cookie:session}}),h.env));
- const response=await h.call('/auth/signout',{method:'POST',headers:{cookie:session,origin:ORIGIN}});assert.equal(response.status,303);assert.equal(response.headers.get('location'),ORIGIN+'/');
+ const response=await h.call('/auth/signout',{method:'POST',headers:{cookie:session,origin:ORIGIN,'sec-fetch-mode':'cors','sec-fetch-site':'same-origin'}});assert.equal(response.status,303);assert.equal(response.headers.get('location'),ORIGIN+'/');
+ assert.deepEqual(response.headers.getSetCookie().sort(),[COOKIE,BROWSER].map(name=>`${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure`).sort());
+ assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(response.headers.get('referrer-policy'),'no-referrer');
  assert.equal(await getGoogleUser(h.req('/api/me',{headers:{cookie:session}}),h.env),null);assert.equal(h.sqlite.prepare('SELECT COUNT(*) AS n FROM auth_sessions').get().n,0);
+ const remote=h.sqlite.prepare('SELECT status,offer,answer,generation FROM sessions').get();assert.equal(remote.status,'ended');assert.equal(remote.offer,'');assert.equal(remote.answer,null);assert.equal(remote.generation,1);
 });
 
 test('only safe relative return paths survive login; auth routes and encoded redirect tricks are discarded',async()=>{

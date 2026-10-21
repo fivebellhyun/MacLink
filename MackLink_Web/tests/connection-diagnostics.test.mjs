@@ -49,7 +49,7 @@ test('the selected candidate pair exposes aggregate counters and safe route type
   remote:{candidateType:'srflx',protocol:'udp',relayProtocol:null},
  });
  assert.equal(parsed.connection.peerState,'connected');assert.equal(parsed.connection.iceState,'completed');
- assert.equal(parsed.viewerVersion,'1.3.2');assert.match(parsed.generatedAt,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+ assert.equal(parsed.viewerVersion,'1.4.0');assert.match(parsed.generatedAt,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
 });
 
 test('candidate types and protocol fields are also filtered at runtime and never copied as free text',async()=>{

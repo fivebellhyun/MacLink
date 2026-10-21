@@ -25,20 +25,19 @@ test('browser detection uses supported languages in order and falls back to Engl
 test('English covers home, connection settings, remote display, quality and keyboard mapping', () => {
   const examples = {
     '내 기기': 'My devices',
-    'Google로 로그인': 'Sign in with Google',
-    'Google 계정으로 로그인됨': 'Signed in with Google',
+    '로그인': 'Sign in',
+    '로그인됨': 'Signed in',
     '로그아웃': 'Sign out',
-    '호스트의 Google 로그인 이메일': "Host's Google sign-in email",
-    '맥 소유자가 Google로 로그인할 때 사용하는 이메일을 입력하세요.': 'Enter the email the Mac owner uses to sign in with Google.',
     '기존 연결 키로 기기 가져오기': 'Import device with an existing key',
     '가져올 MacLink 연결 키 파일': 'MacLink connection key file to import',
     '연결 키 파일은 16 KB 이하여야 합니다.': 'The connection key file must be 16 KB or smaller.',
     '유효한 MacLink 연결 키 파일을 선택해 주세요.': 'Choose a valid MacLink connection key file.',
-    '이 연결 키의 기기를 현재 Google 계정으로 가져올까요? 기존 초대 링크와 접속 세션은 종료됩니다.': 'Import the device for this connection key into the current Google account? Existing invitation links and sessions will end.',
-    '기기를 가져왔습니다. 새 초대 링크를 만들어 주세요.': 'Your device was imported. Create a new invitation link.',
-    '맥북을 등록한 Google 계정으로 로그인해 TURN을 설정하세요. 초대받은 사람은 로그인 없이 접속할 수 있습니다.': 'Sign in with the Google account that registered your MacBook to configure TURN. Invited guests can connect without signing in.',
-    '맥북을 등록하려면 Google로 로그인해 주세요.': 'Sign in with Google to register your MacBook.',
-    '원격 접속': 'Remote access',
+    '이 연결 키의 기기를 현재 Google 계정으로 가져올까요? 기존 접속 세션은 종료됩니다.': 'Import the device for this connection key into the current Google account? Existing sessions will end.',
+    '기기를 가져왔습니다. 내 기기에서 연결하세요.': 'Device imported. Connect from My devices.',
+    '맥북을 등록한 Google 계정으로 로그인해 TURN을 설정하고 내 기기에서 연결하세요.': 'Sign in with the Google account used to register your MacBook to configure TURN and connect from My devices.',
+    '맥북을 등록한 Google 계정으로 로그인해 주세요.': 'Sign in with the Google account that registered your MacBook.',
+    '내 계정으로 연결': 'Connect with my account',
+    '소리 켜기': 'Enable sound',
     'TURN 설정됨': 'TURN configured',
     '키 확인 후 저장': 'Verify and save key',
     '연결됨 · 시간 제한 없음': 'Connected · No time limit',
@@ -63,7 +62,7 @@ test('English API and native permission reasons translate back for Korean viewer
   const examples = {
     'Device not found.': '기기를 찾을 수 없습니다.',
     'Screen Recording permission is not enabled on the MacBook.': '맥북에 화면 기록 권한이 없습니다.',
-    'Accessibility permission is not enabled on the MacBook. Connect with a view-only invitation or grant permission.': '맥북에 손쉬운 사용 권한이 없습니다. 보기 전용 초대로 연결하거나 권한을 허용하세요.',
+    'Accessibility permission is not enabled on the MacBook.': '맥북에 기기 제어 권한이 없습니다.',
     'Screen Recording or Accessibility permission was revoked on the MacBook.': '맥북에서 화면 또는 입력 권한이 해제되었습니다.',
   };
   for (const [english, korean] of Object.entries(examples)) {
@@ -73,18 +72,18 @@ test('English API and native permission reasons translate back for Korean viewer
 });
 
 test('named placeholders preserve Unicode and literal replacement syntax in user names', () => {
-  const template = '{name}의 연결 키를 다운로드했습니다. MacLink 앱을 열고 메뉴바의 Import connection key…(연결 키 가져오기)에서 maclink-config.json을 선택하세요.';
-  const name = '행복한 가족 $& $1 {code} 💻';
-  const params = { name, code: 701 };
+  const template = '현재 로그인한 계정: {email}';
+  const email = '계정 $& $1 {code} 💻@example.test';
+  const params = { email, code: 701 };
   const original = { ...params };
   const english = translateMessage(template, 'en', params);
   const korean = translateMessage(template, 'ko', params);
-  assert.ok(english.includes(name));
-  assert.equal(/[가-힣]/u.test(english.replace(name, '')), false);
-  assert.equal(korean, name + '의 연결 키를 다운로드했습니다. MacLink 앱을 열고 메뉴바의 Import connection key…(연결 키 가져오기)에서 maclink-config.json을 선택하세요.');
+  assert.ok(english.includes(email));
+  assert.equal(/[가-힣]/u.test(english.replace(email, '')), false);
+  assert.equal(korean, '현재 로그인한 계정: ' + email);
   assert.deepEqual(params, original);
   assert.equal(translateMessage('키 확인·저장: {date}', 'en', { date: 0 }), 'Key verified and saved: 0');
-  assert.ok(translateMessage(template, 'en').includes('{name}'));
+  assert.ok(translateMessage(template, 'en').includes('{email}'));
 });
 
 test('numeric TURN diagnostic codes translate in both directions without swallowing unknown errors', () => {
@@ -135,6 +134,8 @@ test('visible Korean JSX and UI message literals are covered by the translation 
     'components/network-settings.tsx',
     'components/remote-viewer.tsx',
     'components/remote-settings.tsx',
+    'components/connect-mac-approval.tsx',
+    'lib/enrollment-client.ts',
     'lib/quality.ts',
   ];
   const failures = [];
@@ -173,7 +174,7 @@ function jsxAttribute(node, name) {
   return node.attributes.properties.find(item => ts.isJsxAttribute(item) && item.name.getText() === name)?.initializer;
 }
 
-test('owner login links use Google and sign-out is a same-origin POST form', () => {
+test('owner login links use Google and sign-out intercepts the POST form before native navigation', () => {
   for (const file of ['app/page.tsx', 'components/network-settings.tsx']) {
     const source = uiSource(file);
     const loginLinks = findNodes(source, node => ts.isJsxOpeningElement(node) && node.tagName.getText() === 'a')
@@ -189,6 +190,78 @@ test('owner login links use Google and sign-out is a same-origin POST form', () 
   const signout = forms.find(node => jsxAttribute(node, 'action')?.text === '/auth/signout');
   assert.ok(signout);
   assert.equal(jsxAttribute(signout, 'method').text, 'post');
+  assert.equal(jsxAttribute(signout, 'target').text, '_top');
+  const submit = jsxAttribute(signout, 'onSubmit')?.expression;
+  assert.ok(submit);
+  const compiled = ts.transpileModule('const submitted = ' + submit.getText(), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const calls = [];
+  new Function('signout', compiled + '; return submitted;')(() => { calls.push('signout'); })({
+    preventDefault() { calls.push('preventDefault'); },
+  });
+  assert.deepEqual(calls, ['preventDefault', 'signout']);
+  const button = findNodes(signout.parent, node => ts.isJsxOpeningElement(node) && node.tagName.getText() === 'button')[0];
+  assert.equal(jsxAttribute(button, 'disabled')?.expression?.getText(), 'busy');
+});
+
+function signoutHarness(send = async () => new Response(null, { status: 200 })) {
+  const source = uiSource('app/page.tsx');
+  const signout = findNodes(source, node => ts.isFunctionDeclaration(node) && node.name?.text === 'signout')[0];
+  const work = findNodes(source, node => ts.isFunctionDeclaration(node) && node.name?.text === 'work')[0];
+  assert.ok(signout);
+  assert.ok(work);
+  const compiled = ts.transpileModule(work.getText() + '\n' + signout.getText(), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const requests = [], navigations = [], busyStates = [], errors = [], timeouts = [], cleanup = [];
+  const signal = new AbortController().signal;
+  const invoke = new Function('fetch', 'window', 'setBusy', 'setError', 'AbortSignal', 'forgetConnection', 'peer', 'setSession', compiled + '; return signout;')(
+    async (...args) => { requests.push(args); return send(...args); },
+    { location: { assign: url => { navigations.push(url); } } },
+    value => { busyStates.push(value); },
+    value => { errors.push(value); },
+    { timeout: milliseconds => { timeouts.push(milliseconds); return signal; } },
+    () => { cleanup.push('forget'); },
+    { current: { close() { cleanup.push('close'); } } },
+    value => { cleanup.push(['session', value]); },
+  );
+  return { invoke, requests, navigations, busyStates, errors, timeouts, signal, cleanup };
+}
+
+test('signout uses CORS mode with same-origin cookies under no-referrer and navigates only after success', async () => {
+  let complete;
+  const h = signoutHarness(() => new Promise(resolve => { complete = resolve; }));
+  const pending = h.invoke();
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0][0], '/auth/signout');
+  assert.deepEqual(h.requests[0][1], {
+    method: 'POST', mode: 'cors', credentials: 'same-origin', cache: 'no-store', signal: h.signal,
+  });
+  assert.deepEqual(h.timeouts, [10000]);
+  assert.deepEqual(h.busyStates, [true]);
+  assert.deepEqual(h.navigations, []);
+  complete(new Response(null, { status: 200 }));
+  await pending;
+  assert.deepEqual(h.navigations, ['/']);
+  assert.deepEqual(h.busyStates, [true, false]);
+  assert.deepEqual(h.errors, ['']);
+  assert.deepEqual(h.cleanup, ['forget', 'close', ['session', null]]);
+});
+
+test('rejected or failed signout stays on the page, restores controls and shows a localized safe error', async () => {
+  const message = '로그아웃하지 못했습니다. 다시 시도해 주세요.';
+  for (const send of [
+    async () => new Response('private server response', { status: 403 }),
+    async () => { throw new Error('private network failure'); },
+  ]) {
+    const h = signoutHarness(send);
+    await h.invoke();
+    assert.deepEqual(h.navigations, []);
+    assert.deepEqual(h.busyStates, [true, false]);
+    assert.deepEqual(h.errors, ['', message]);
+    assert.deepEqual(h.cleanup, []);
+    assert.equal(translateMessage(message, 'ko'), message);
+    const english = translateMessage(message, 'en');
+    assert.notEqual(english, message);
+    assert.equal(/[가-힣]/u.test(english), false);
+  }
 });
 
 function claimHarness(confirmed = true) {
@@ -215,10 +288,10 @@ test('device import sends only the validated key to the same-origin API after co
   const { invoke, calls } = claimHarness();
   await invoke(keyFile({ ...connectionKey, site: 'https://untrusted.invalid', owner: 'ignored' }));
   assert.deepEqual(calls, [
-    ['confirm', '이 연결 키의 기기를 현재 Google 계정으로 가져올까요? 기존 초대 링크와 접속 세션은 종료됩니다.'],
+    ['confirm', '이 연결 키의 기기를 현재 Google 계정으로 가져올까요? 기존 접속 세션은 종료됩니다.'],
     ['api', 'devices/claim', 'POST', { ...connectionKey, confirm: true }],
     ['refresh'],
-    ['notify', '기기를 가져왔습니다. 새 초대 링크를 만들어 주세요.'],
+    ['notify', '기기를 가져왔습니다. 내 기기에서 연결하세요.'],
   ]);
 });
 

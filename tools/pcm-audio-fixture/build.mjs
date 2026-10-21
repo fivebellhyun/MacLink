@@ -1,0 +1,20 @@
+// Build a self-contained QA page from the current real PCM player and worklet.
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+const checkout=new URL('../../MackLink_Web/',import.meta.url);
+const require=createRequire(new URL('package.json',checkout));
+const ts=require('typescript');
+const source=readFileSync(new URL('lib/pcm-audio.ts',checkout),'utf8');
+const runtime=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+if(runtime.includes('require('))throw Error('The standalone PCM fixture must not load external modules.');
+const worklet=readFileSync(new URL('public/system-audio-worklet.js',checkout));
+const moduleUrl='data:application/javascript;base64,'+worklet.toString('base64');
+const safe=value=>value.replaceAll('</script','<\\/script');
+const embedded=`const {PcmAudioPlayer,PCM_READY,PCM_DISABLED,PCM_CHANNEL_LABEL,pcmSignal}=(()=>{const exports={};\n${runtime}\nreturn exports;})();`;
+const html=readFileSync(new URL('./audio-fixture.source.html',import.meta.url),'utf8').replace('/*__PCM_RUNTIME__*/',safe(embedded)).replace('/*__WORKLET_MODULE__*/null',JSON.stringify(moduleUrl));
+if(html.includes('/*__PCM_RUNTIME__*/')||html.includes("from '/lib/pcm-audio.ts'"))throw Error('Fixture embedding failed.');
+const output=new URL('../../.build/pcm-audio-fixture/index.html',import.meta.url);
+mkdirSync(new URL('./',output),{recursive:true});
+writeFileSync(output,html);
+console.log('Standalone PCM fixture built: '+fileURLToPath(output));

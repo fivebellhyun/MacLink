@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {peerConfiguration,describeRoute,makeOffer,rememberConnection} from '../lib/remote-client.ts';
+import {peerConfiguration,describeRoute,makeOffer,rememberConnection,restoreConnection,createPeer} from '../lib/remote-client.ts';
 const ice={iceServers:[{urls:['stun:stun.cloudflare.com:3478']},{urls:['turn:turn.cloudflare.com:3478?transport=udp','turn:turn.cloudflare.com:3478?transport=tcp','turns:turn.cloudflare.com:443?transport=tcp'],username:'temporary-user',credential:'temporary-password'}],turnEnabled:true,tls443:true,expiresAt:Date.now()+86400000};
 test('TLS-only mode excludes direct and UDP candidates and uses relay ICE policy',()=>{
  const config=peerConfiguration(ice,'tls');assert.equal(config.iceTransportPolicy,'relay');assert.deepEqual(config.iceServers,[{urls:['turns:turn.cloudflare.com:443?transport=tcp'],username:'temporary-user',credential:'temporary-password'}]);
@@ -31,6 +31,21 @@ test('late ICE relay candidates are included after the previous six-second cutof
 });
 test('tab recovery persists the connection preference without caching TURN credentials',t=>{
  let stored='';Object.defineProperty(globalThis,'sessionStorage',{configurable:true,value:{setItem(_k,v){stored=v;}}});t.after(()=>delete globalThis.sessionStorage);
- rememberConnection({id:'a'.repeat(24),token:'b'.repeat(64),name:'Mac',mode:'control',status:'active',generation:1,connectionMode:'tls',iceConfig:ice});
+ rememberConnection({id:'a'.repeat(24),token:'b'.repeat(64),name:'Mac',mode:'control',status:'active',generation:1,deviceId:'c'.repeat(24),ownerId:'google:owner',connectionMode:'tls',iceConfig:ice});
  const value=JSON.parse(stored);assert.equal(value.connectionMode,'tls');assert.equal(stored.includes('temporary-password'),false);assert.equal(Object.hasOwn(value,'iceConfig'),false);
+});
+
+test('recovery requires the signed-in owner and a currently registered device and drops legacy tokens',t=>{
+ let stored='',removed=0;Object.defineProperty(globalThis,'sessionStorage',{configurable:true,value:{setItem(_k,v){stored=v;},getItem(){return stored;},removeItem(){stored='';removed++;}}});t.after(()=>delete globalThis.sessionStorage);
+ const session={id:'a'.repeat(24),token:'b'.repeat(64),name:'Mac',mode:'control',status:'active',generation:1,deviceId:'c'.repeat(24),ownerId:'google:owner'};
+ rememberConnection(session);assert.equal(restoreConnection('google:owner',[session.deviceId]).id,session.id);
+ rememberConnection(session);assert.equal(restoreConnection('google:other',[session.deviceId]),null);assert.equal(stored,'');
+ rememberConnection(session);assert.equal(restoreConnection('google:owner',[]),null);
+ rememberConnection({...session,ownerId:undefined,deviceId:undefined});assert.equal(restoreConnection('google:owner',[session.deviceId]),null);
+ stored='{invalid';assert.equal(restoreConnection('google:owner',[session.deviceId]),null);assert.equal(removed,4);
+});
+test('offers receive screen and system audio without requesting a local microphone',t=>{
+ const transceivers=[],channels=[];class Peer{constructor(config){this.config=config;}addTransceiver(...args){transceivers.push(args);}createDataChannel(...args){channels.push(args);return {};}}
+ Object.defineProperty(globalThis,'RTCPeerConnection',{configurable:true,value:Peer});t.after(()=>delete globalThis.RTCPeerConnection);
+ const result=createPeer(ice);assert.deepEqual(transceivers,[['video',{direction:'recvonly'}],['audio',{direction:'recvonly'}]]);assert.deepEqual(channels,[['control',{ordered:true}],['maclink-system-audio',{ordered:false,maxRetransmits:0}]]);assert.ok(result.peer instanceof Peer);
 });

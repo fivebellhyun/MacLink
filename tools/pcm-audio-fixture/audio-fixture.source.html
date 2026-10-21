@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MacLink PCM 회복 검증</title>
+<style>
+body{font:16px system-ui;max-width:1000px;margin:32px auto;padding:24px;color:#164d3f;background:#f2f8f5}h1{font-size:28px}button{padding:12px 18px;margin:5px;border-radius:12px;border:1px solid #8bb2a2;background:white;color:inherit;font:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:default}pre{font:14px/1.5 ui-monospace,monospace;white-space:pre-wrap;background:white;padding:24px;border-radius:16px}#state{font-size:21px;font-weight:650;margin:24px 0}small,#help{color:#567368}#help{min-height:24px}
+</style>
+<h1>MacLink PCM 회복 검증</h1>
+<p>가상 48 kHz 스테레오 · 로컬 WebRTC · 실제 PCM 플레이어와 AudioWorklet</p>
+<small>실제 Mac 오디오, Google 계정, 운영 서버를 사용하지 않는 테스트입니다. 필요한 코드를 이 파일에 포함했습니다.</small>
+<p>
+<button id="start" type="button">PCM 검증 시작</button>
+<button id="gap" type="button" disabled>180 ms 전송 지연</button>
+<button id="sender" type="button" disabled>커넥터 일시 중단 신호</button>
+<button id="slow" type="button" disabled>21 ms 전송</button>
+<button id="steady" type="button" disabled>20 ms 전송</button>
+<button id="long" type="button" disabled>1.8초 전송 중단</button>
+<button id="invalid" type="button" disabled>잘못된 패킷</button>
+<button id="stop" type="button" disabled>중지 및 정리</button>
+</p>
+<p id="help">‘PCM 검증 시작’을 누르면 테스트 버튼이 활성화됩니다. 작은 테스트 소리가 재생됩니다.</p>
+<div id="state" role="status" aria-live="polite">스크립트 준비 중</div>
+<pre id="status"></pre>
+<noscript>JavaScript를 켜야 버튼이 작동합니다.</noscript>
+<script>
+window.addEventListener('error',event=>{document.querySelector('#state').textContent='페이지 오류: '+event.message;});
+</script>
+<script>
+/*__PCM_RUNTIME__*/
+const WORKLET_MODULE_URL=/*__WORKLET_MODULE__*/null;
+const output=document.querySelector('#status'),label=document.querySelector('#state'),help=document.querySelector('#help');
+const buttons=Object.fromEntries(['start','gap','sender','slow','steady','long','invalid','stop'].map(id=>[id,document.getElementById(id)]));
+let current=null,state='준비 완료 · PCM 검증 시작을 눌러 주세요.';
+const active=run=>current===run&&!run.closed;
+const connected=run=>!!run&&active(run)&&run.ready&&run.player?.prepared&&run.remote?.readyState==='open';
+function report(){
+ const run=current,enabled=connected(run);
+ buttons.start.disabled=!!run&&active(run)&&run.preparing;
+ buttons.stop.disabled=!run||!active(run);
+ for(const id of ['gap','sender','slow','steady','long','invalid'])buttons[id].disabled=!enabled;
+ label.textContent=state;
+ output.textContent=JSON.stringify({packets:run?.accepted||0,playingCallbacks:run?.playing||0,recoveries:Math.max(0,(run?.playing||0)-1),bufferingCallbacks:run?.buffering||0,audioContexts:run?.contexts||0,bufferingKeptOutputOwnership:run?.ownership.length?run.ownership.every(Boolean):null,beforePlay:run?.before||0,failures:run?.failures||[],playerPrepared:run?.player?.prepared||false,playerOwnsOutput:run?.player?.ownsOutput||false,channelState:run?.channel?.readyState||'closed',producerIntervalMs:run?.interval||20,events:run?.events.slice(-10)||[]},null,2);
+}
+function event(run,value){if(current!==run)return;run.events.push(value);report();}
+function dispose(run){
+ if(!run||run.closed)return;
+ run.closed=true;run.preparing=false;run.ready=false;run.abort.abort();
+ clearTimeout(run.timer);clearInterval(run.watch);clearTimeout(run.connectionTimer);run.timer=run.watch=run.connectionTimer=null;
+ run.player?.close();
+ for(const channel of [run.channel,run.remote])if(channel){channel.onopen=channel.onmessage=channel.onerror=null;channel.onclose=()=>{if(current===run)report();};try{channel.close();}catch{}}
+ for(const peer of [run.left,run.right])if(peer){peer.ondatachannel=peer.onconnectionstatechange=null;peer.close();}
+}
+function fail(run,reason){
+ if(!active(run))return;
+ run.failures.push(reason);dispose(run);
+ state=reason==='timeout'?'수신 중단 처리 확인 · timeout':reason==='invalid'?'잘못된 패킷 차단 확인 · invalid':'PCM 테스트 종료 · '+reason;
+ help.textContent='테스트 스트림과 타이머를 정리했습니다. ‘PCM 검증 시작’으로 다시 실행할 수 있습니다.';
+ event(run,'fallback: '+reason);
+}
+function stop(){
+ const run=current;if(!run||!active(run))return;
+ dispose(run);state='중지 완료 · 재생·채널·타이머 정리';help.textContent='‘PCM 검증 시작’으로 다시 실행할 수 있습니다.';event(run,'stopped');
+}
+function packet(run){
+ const frames=960,buffer=new ArrayBuffer(16+frames*8),view=new DataView(buffer);
+ view.setUint32(0,0x4d4c5031,false);view.setUint32(4,run.sequence++,true);view.setUint16(8,frames,true);view.setUint8(10,2);view.setUint8(11,1);view.setUint32(12,48000,true);
+ for(let i=0;i<frames;i++){const value=.005*Math.sin(run.phase);run.phase+=2*Math.PI*440/48000;view.setFloat32(16+i*8,value,true);view.setFloat32(20+i*8,-value,true);}
+ return buffer;
+}
+function produce(run){
+ run.timer=null;if(!connected(run))return;
+ const now=performance.now();
+ if(now<run.holdUntil){run.nextSend=run.holdUntil;run.timer=setTimeout(()=>produce(run),Math.max(10,run.holdUntil-now));return;}
+ if(now-run.nextSend>100)run.nextSend=now;
+ try{run.remote.send(packet(run));}catch{fail(run,'send-error');return;}
+ run.nextSend+=run.interval;run.timer=setTimeout(()=>produce(run),Math.max(10,run.nextSend-performance.now()));
+}
+async function gathered(peer,run){
+ if(peer.iceGatheringState==='complete')return;
+ await new Promise((resolve,reject)=>{
+  let timer;
+  const cleanup=()=>{clearTimeout(timer);peer.removeEventListener('icegatheringstatechange',changed);run.abort.signal.removeEventListener('abort',aborted);};
+  const changed=()=>{if(peer.iceGatheringState==='complete'){cleanup();resolve();}};
+  const aborted=()=>{cleanup();reject(new Error('cancelled'));};
+  peer.addEventListener('icegatheringstatechange',changed);run.abort.signal.addEventListener('abort',aborted,{once:true});
+  timer=setTimeout(()=>{cleanup();reject(new Error('connection-timeout'));},7000);
+  if(run.abort.signal.aborted)aborted();else changed();
+ });
+}
+function check(run){if(!active(run))throw new Error('cancelled');}
+async function start(){
+ if(current&&active(current)&&current.preparing)return;
+ dispose(current);
+ const run={closed:false,preparing:true,ready:false,abort:new AbortController(),player:null,left:null,right:null,channel:null,remote:null,timer:null,watch:null,connectionTimer:null,sequence:0,phase:0,holdUntil:0,interval:20,nextSend:0,accepted:0,playing:0,before:0,buffering:0,contexts:0,ownership:[],failures:[],events:[]};
+ current=run;state='PCM 오디오와 로컬 연결 준비 중';help.textContent='준비 중에도 ‘중지 및 정리’로 취소할 수 있습니다.';report();
+ try{
+  const Context=window.AudioContext||window.webkitAudioContext;
+  if(!Context||!('audioWorklet' in Context.prototype)||typeof AudioWorkletNode!=='function'||typeof RTCPeerConnection!=='function')throw new Error('이 브라우저는 PCM 테스트를 지원하지 않습니다.');
+  // Embed the exact project worklet. Do not fetch a server-only root path.
+  class FixtureAudioContext extends Context{
+   constructor(options){super(options);run.contexts++;}
+   get audioWorklet(){const native=super.audioWorklet;return{addModule:()=>native.addModule(WORKLET_MODULE_URL)};}
+  }
+  run.player=new PcmAudioPlayer({
+   beforePlay:()=>{if(!active(run))return false;run.before++;return true;},
+   onPlaying:()=>{if(!active(run))return;run.playing++;state=run.playing>1?'PCM 재생 회복 확인':'PCM 실제 출력 확인';event(run,'playing');},
+   onBuffering:()=>{if(!active(run))return;run.buffering++;run.ownership.push(run.player.ownsOutput);state='PCM 버퍼링 중 · 같은 오디오 컨텍스트 유지';event(run,'buffering');},
+   onFailure:reason=>fail(run,reason)
+  },{AudioContext:FixtureAudioContext,AudioWorkletNode,isSecureContext:window.isSecureContext});
+  await run.player.startFromGesture();check(run);if(!run.player.prepared)throw new Error('오디오 준비 실패');
+  run.connectionTimer=setTimeout(()=>fail(run,'connection-timeout'),10000);
+  run.left=new RTCPeerConnection({iceServers:[]});run.right=new RTCPeerConnection({iceServers:[]});
+  const channel=run.left.createDataChannel(PCM_CHANNEL_LABEL,{ordered:false,maxRetransmits:0});run.channel=channel;channel.binaryType='arraybuffer';
+  const transportError=()=>{if(active(run))fail(run,'connection-closed');};
+  channel.onclose=channel.onerror=transportError;
+  channel.onmessage=message=>{
+   if(!active(run))return;
+   if(typeof message.data==='string'){
+    try{if(pcmSignal(message.data)==='opus'){run.player.rebuffer();if(active(run)&&channel.readyState==='open')channel.send(PCM_READY);}}catch{fail(run,'invalid');}return;
+   }
+   run.accepted++;run.player.receive(message.data);if(run.accepted%50===0)report();
+  };
+  channel.onopen=()=>{if(!active(run))return;channel.send(PCM_READY);run.player.expectPackets();run.watch=setInterval(()=>{if(active(run))run.player.watchdog();},100);};
+  run.right.ondatachannel=message=>{
+   if(!active(run)){message.channel.close();return;}
+   const remote=message.channel;run.remote=remote;remote.onclose=remote.onerror=transportError;
+   remote.onmessage=message=>{
+    if(!active(run))return;
+    if(message.data===PCM_DISABLED){stop();return;}
+    if(message.data!==PCM_READY)return;
+    run.preparing=false;run.ready=true;clearTimeout(run.connectionTimer);run.connectionTimer=null;help.textContent='지연·일시 중단 버튼으로 회복을 확인하세요. ‘1.8초 전송 중단’과 ‘잘못된 패킷’은 테스트 스트림을 종료합니다.';
+    if(run.timer===null){run.nextSend=performance.now()+20;run.timer=setTimeout(()=>produce(run),20);}report();
+   };
+  };
+  await run.left.setLocalDescription(await run.left.createOffer());check(run);await gathered(run.left,run);check(run);
+  await run.right.setRemoteDescription(run.left.localDescription);check(run);
+  await run.right.setLocalDescription(await run.right.createAnswer());check(run);await gathered(run.right,run);check(run);
+  await run.left.setRemoteDescription(run.right.localDescription);check(run);
+  if(!run.playing)state='로컬 연결 준비 완료 · PCM 데이터 대기';report();
+ }catch(error){if(active(run))fail(run,error.message||'initialization-error');}
+}
+function action(id,runAction){buttons[id].onclick=()=>{const run=current;if(!connected(run))return;try{runAction(run);}catch{fail(run,'send-error');}};}
+buttons.start.onclick=()=>void start();buttons.stop.onclick=stop;
+action('gap',run=>{run.holdUntil=performance.now()+180;event(run,'180 ms producer gap');});
+action('sender',run=>{run.holdUntil=performance.now()+100;run.remote.send(JSON.stringify({type:'format',format:'opus'}));event(run,'temporary sender pause');});
+action('slow',run=>{run.interval=21;state='21 ms 간격으로 전송 중';event(run,'21 ms producer');});
+action('steady',run=>{run.interval=20;state='20 ms 간격으로 전송 중';event(run,'20 ms producer');});
+action('long',run=>{run.holdUntil=performance.now()+1800;state='1.8초 수신 중단 테스트 중';event(run,'1800 ms producer gap');});
+action('invalid',run=>{run.remote.send(new Uint8Array([1,2,3]).buffer);event(run,'invalid packet');});
+window.addEventListener('pagehide',()=>dispose(current));report();
+</script>
+</html>

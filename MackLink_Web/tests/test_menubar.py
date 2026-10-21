@@ -15,15 +15,15 @@ import app_runtime as runtime
 
 def config(**changes):
     return {'site': 'https://mac.example', 'device': 'a' * 24, 'token': 'b' * 64,
-            'name': 'My Mac', 'allow_unattended': False, **changes}
+            'name': 'My Mac', **changes}
 
 
 class ConfigurationTests(unittest.TestCase):
-    def test_import_is_atomic_private_and_disables_downloaded_unattended_flag(self):
+    def test_import_is_atomic_private_and_saves_only_registration_fields(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder) / 'MacLink'
             destination = root / 'config.json'
-            confirmed = config(allow_unattended=True, extra='ignored')
+            confirmed = config(extra='ignored')
             saved = runtime.save_imported_config(confirmed, destination)
             self.assertEqual(saved, config())
             self.assertEqual(runtime.load_config(destination), config())
@@ -39,7 +39,7 @@ class ConfigurationTests(unittest.TestCase):
                config(site='https://mac.example/#key'), config(site='https://mac.example:bad'),
                config(site='https://mac.example\\path'), config(site='https://mac.example\n'),
                config(token='x' * 64), config(device='abc'), config(name='unsafe\nname'),
-               config(allow_unattended='yes'), [], None]
+               [], None]
         with tempfile.TemporaryDirectory() as folder:
             destination = Path(folder) / 'config.json'
             runtime.atomic_json(destination, config())
@@ -96,6 +96,7 @@ class StatusTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'status.json'
             for raw in ({}, {'pid': 1, 'updated': 100, 'connection': ['bad']},
+                        {'pid': 1, 'updated': 100, 'session': 'pending'},
                         {'pid': True, 'updated': 100}, {'pid': 1, 'updated': float('nan')}):
                 runtime.atomic_json(path, raw)
                 self.assertIsNone(runtime.read_status(path, now=100))

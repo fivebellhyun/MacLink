@@ -40,10 +40,14 @@ test('only exact known message fields are translated, including nested array ent
   assert.deepEqual(localizeApiPayload(english, 'ko'), original);
 });
 
-test('new English connector permission reasons are translated for Korean viewers', () => {
-  const english = 'Accessibility permission is not enabled on the MacBook. Connect with a view-only invitation or grant permission.';
-  assert.equal(localizeApiPayload({ reason: english }, 'ko').reason, '맥북에 손쉬운 사용 권한이 없습니다. 보기 전용 초대로 연결하거나 권한을 허용하세요.');
-  assert.equal(localizeApiPayload({ reason: english }, 'en').reason, english);
+test('current connector permission errors translate without the removed invitation flow', () => {
+  for (const [english, korean] of [
+    ['Accessibility permission is not enabled on the MacBook.', '맥북에 기기 제어 권한이 없습니다.'],
+    ['Screen Recording or Accessibility permission is not enabled on the MacBook.', '맥북에 화면 기록 또는 기기 제어 권한이 없습니다.'],
+  ]) {
+    assert.equal(localizeApiPayload({ reason: english }, 'ko').reason, korean);
+    assert.equal(localizeApiPayload({ reason: english }, 'en').reason, english);
+  }
 });
 
 test('HTTP errors keep the legacy Korean default and advertise English when requested', async () => {
@@ -72,7 +76,7 @@ test('TURN warnings and native persisted reasons follow request language without
   const ice = await warning.json();
   assert.equal(ice.warning, 'The Mac owner can configure TURN to enable TLS 443 relay connections on restricted networks.');
   assert.deepEqual(ice.iceServers, [{ urls: ['stun:stun.cloudflare.com:3478'] }]);
-  const response = await handleApi(new Request('https://maclink.example/api/sessions/session', { headers: { Authorization: 'Bearer ' + 'a'.repeat(64), 'Accept-Language': 'ko' } }), env);
+  const response = await handleApi(new Request('https://maclink.example/api/sessions/session', { headers: { Authorization: 'Bearer ' + 'a'.repeat(64), Cookie: '__Host-maclink_session='+'a'.repeat(43), 'Accept-Language': 'ko' } }), env);
   const body = await response.json();
   assert.equal(body.reason, '맥북에 화면 기록 권한이 없습니다.');
   assert.equal(body.answer, session.answer);
@@ -81,7 +85,7 @@ test('TURN warnings and native persisted reasons follow request language without
 });
 
 test('the catalog covers every static visible Korean helper and API message', () => {
-  const files = ['lib/server.ts', 'lib/turn.ts', 'lib/invite-code.ts', 'lib/remote-client.ts'];
+  const files = ['lib/enrollment.ts', 'lib/server.ts', 'lib/turn.ts', 'lib/remote-client.ts'];
   for (const file of files) {
     const source = readFileSync(new URL('../' + file, import.meta.url), 'utf8');
     for (const [, , text] of source.matchAll(/(['"])(.*?)\1/g)) {
