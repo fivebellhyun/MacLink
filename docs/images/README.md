@@ -1,12 +1,13 @@
 # Original MacLink diagrams
 
+The architecture and setup diagrams reflect Connector 1.4.0.
 Three diagrams are provided in English (`-en`) and Korean (`-ko`):
 
 | Name | Content | PNG size |
 | --- | --- | --- |
 | `architecture` | Website coordination, direct WebRTC, optional encrypted TURN | 1760 x 1190 |
 | `connection-paths` | Automatic ICE, one optional TURN/TLS retry, connection failure handling | 1760 x 1220 |
-| `setup-flow` | Google sign-in, DMG installation, permissions, links and host email check | 1760 x 1300 |
+| `setup-flow` | Google sign-in, DMG installation, permissions and same-account My devices access | 1760 x 1300 |
 
 The READMEs reference PNG files with relative paths, so they render on GitHub.
 SVG files retain editable vector shapes. Text is outlined for portable rendering.
@@ -21,7 +22,14 @@ images from the reference repository. They use the project license in
 않아도 보이도록 SVG의 글자는 윤곽선으로 변환했습니다. 문구를 바꾸려면
 생성 스크립트를 수정하고 필요한 글꼴과 Inkscape를 설치해 다시 실행하세요.
 
-## Connector screenshot galleries
+## Connector registration preview
+
+[connector-registration-ko.png](connector-registration-ko.png) shows the actual
+Connector 1.4.0 Home and Settings view code rendered offscreen in Korean.
+The example confirmation code is synthetic. No device keys, real permission
+states, workers or live account data are read for this documentation preview.
+
+## Earlier Connector screenshot galleries
 
 | Asset | Content | PNG size |
 | --- | --- | --- |

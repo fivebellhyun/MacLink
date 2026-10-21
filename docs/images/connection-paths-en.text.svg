@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1220" viewBox="0 0 1760 1220" role="img" aria-labelledby="title desc">
+<title id="title">MacLink connection selection</title><desc id="desc">Automatic WebRTC selection, one optional TURN TLS-only retry, then a connection failure notice if no route works.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA58C"/></marker><marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087A59"/></marker></defs>
+<rect x="0" y="0" width="1760" height="1220" rx="0" fill="#F6F7F2"/>
+<text x="80" y="70" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="start">CONNECTION PATHS</text>
+<text x="80" y="134" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="46" font-weight="700" text-anchor="start">Connect with WebRTC, directly or via TURN.</text>
+<text x="80" y="183" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="24" font-weight="400" text-anchor="start">Automatic mode selects an available route; connection success depends on network policy.</text>
+<rect x="80" y="230" width="1600" height="90" rx="20" fill="#EAF2E5"/>
+<text x="112" y="267" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="24" font-weight="700" text-anchor="start">TLS-only mode starts at stage 02.</text>
+<text x="112" y="300" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="400" text-anchor="start">Without configured TURN credentials, automatic mode skips stage 02.</text>
+<rect x="80" y="370" width="460" height="255" rx="24" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="650" y="370" width="460" height="255" rx="24" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="1220" y="370" width="460" height="255" rx="24" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="112" y="397" width="74" height="42" rx="21" fill="#EAF2E5"/>
+<text x="149.0" y="426" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">01</text>
+<text x="112" y="485" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="29" font-weight="700" text-anchor="start">Auto · WebRTC</text>
+<text x="112" y="532" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">ICE gathers direct candidates</text>
+<text x="112" y="566" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">and configured TURN routes.</text>
+<text x="112" y="600" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">ICE selects a working pair.</text>
+<rect x="682" y="397" width="74" height="42" rx="21" fill="#EAF2E5"/>
+<text x="719.0" y="426" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">02</text>
+<text x="682" y="485" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="27" font-weight="700" text-anchor="start">TURN/TLS 443 only</text>
+<text x="682" y="532" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">One relay-only retry after failure.</text>
+<text x="682" y="566" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Requires configured TURN keys.</text>
+<text x="682" y="600" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">No repeated retry loop.</text>
+<rect x="1252" y="397" width="74" height="42" rx="21" fill="#F7F0E7"/>
+<text x="1289.0" y="426" fill="#986536" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">03</text>
+<text x="1252" y="485" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="27" font-weight="700" text-anchor="start">Connection unavailable</text>
+<text x="1252" y="532" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Neither WebRTC route connected.</text>
+<text x="1252" y="566" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">The session ends with an error.</text>
+<text x="1252" y="600" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Check the network before retrying.</text>
+<path d="M 540 495 H 650" fill="none" stroke="#8AA58C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="595" y="465" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="400" text-anchor="middle">Failed</text>
+<path d="M 1110 495 H 1220" fill="none" stroke="#8AA58C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1165" y="465" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="400" text-anchor="middle">Failed</text>
+<path d="M 310 625 V 704" fill="none" stroke="#087A59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowGreen)"/>
+<path d="M 880 625 V 704" fill="none" stroke="#087A59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowGreen)"/>
+<rect x="80" y="720" width="460" height="180" rx="24" fill="#EAF2E5"/>
+<rect x="650" y="720" width="460" height="180" rx="24" fill="#EAF2E5"/>
+<rect x="1220" y="720" width="460" height="180" rx="24" fill="#F7F0E7"/>
+<text x="112" y="766" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="25" font-weight="700" text-anchor="start">Connected by WebRTC</text>
+<text x="112" y="813" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Direct or TURN-relayed</text>
+<text x="112" y="850" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Video + system sound + control data</text>
+<text x="682" y="766" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="24" font-weight="700" text-anchor="start">Connected via TURN/TLS</text>
+<text x="682" y="813" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Browser-to-TURN uses TLS 443</text>
+<text x="682" y="850" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">The Mac must still be reachable.</text>
+<text x="1252" y="766" fill="#986536" font-family="DejaVu Sans,sans-serif" font-size="25" font-weight="700" text-anchor="start">Review network settings</text>
+<text x="1252" y="813" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Check TURN credentials and rules.</text>
+<text x="1252" y="850" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">Try another permitted network.</text>
+<rect x="80" y="940" width="1600" height="148" rx="24" fill="#F7F0E7"/>
+<text x="112" y="986" fill="#986536" font-family="DejaVu Sans,sans-serif" font-size="25" font-weight="700" text-anchor="start">TURN/TLS 443 depends on network policy.</text>
+<text x="112" y="1029" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">A proxy, firewall or managed browser may still block TURN. This setting does not bypass network policy.</text>
+<text x="112" y="1063" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="400" text-anchor="start">A faster connection is possible only when a compatible route is available.</text>
+<path d="M 80 1126 H 1680" fill="none" stroke="#D9E2D7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="80" y="1161" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="400" text-anchor="start">MacLink · fivebellhyun · 1.3.2</text>
+<text x="1680" y="1161" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="400" text-anchor="end">Schematic  /  02</text>
+</svg>

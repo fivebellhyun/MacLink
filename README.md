@@ -2,11 +2,11 @@
 
 # MacLink
 
-Access your Mac from a browser with a single link.
+Access your Mac from anywhere with the same Google account.
 
-Install the Connector on your Mac, create an access link, and open it on another computer to view the screen or control the mouse and keyboard. Manage the host from a native macOS menu bar app.
+Install the Connector and register your Mac to your Google account. Sign in to the same account on another computer and choose **My devices → Connect** to receive its screen and system sound and control the mouse and keyboard. Manage the host from a native macOS menu bar app.
 
-**Connector 1.3.2** · **English** / [한국어](README.ko.md)
+**Connector 1.4.0** · **English** / [한국어](README.ko.md)
 
 [Website](https://www.maclink.cloud/) · [Download Connector](https://www.maclink.cloud/api/downloads/MacLink-Connector-arm64.dmg) · [Releases](https://github.com/fivebellhyun/MacLink/releases) · [License](LICENSE.md) · [Privacy Policy](https://www.maclink.cloud/privacy) · [Terms of Service](https://www.maclink.cloud/terms)
 
@@ -14,11 +14,13 @@ Developed by [fivebellhyun](https://github.com/fivebellhyun). Source is availabl
 
 ## Quick Start
 
-1. Open the [MacLink website](https://www.maclink.cloud/) on your Mac, sign in with Google, and register your device under **My Devices**.
-2. Download **MacLink Connector** and the device key, `maclink-config.json`.
-3. Open `MacLink-Connector-arm64.dmg`, drag **MacLink** into **Applications**, and launch it.
-4. Open the menu bar app, select **Settings**, and import the device key. Allow **Screen Recording** and **Accessibility** in macOS System Settings, then restart the Connector.
-5. Confirm that the device is online, create an access link, and open it on the remote computer. Enter the **host's Google sign-in email address** to connect.
+1. Download **MacLink Connector** from the [website](https://www.maclink.cloud/). Open the DMG, drag **MacLink** into **Applications**, and launch it.
+2. In the menu bar app, choose **Connect with Google**. Your browser opens the MacLink registration page.
+3. Sign in with Google, check the Mac name, enter the six-digit code shown in the Connector, and approve registration. The Connector applies its registration automatically; no key-file download or import is needed.
+4. Allow **Screen & System Audio Recording** and **Device control / Accessibility** in macOS System Settings, then restart the Connector if requested. Wait for the Mac to appear online under **My devices**.
+5. On another computer, sign in to the **same Google account** and choose **Connect** on your online Mac.
+
+Restarting or updating a configured Connector reuses its saved registration. A device that has never connected is shown as **Setup in progress**, rather than as an offline configured Mac.
 
 The remote computer only needs a compatible browser. Your Mac must remain **awake, logged in, connected to the internet, and running the Connector**.
 
@@ -27,7 +29,7 @@ The downloadable Connector targets **Apple M-series Macs (Apple silicon, arm64)*
 <details>
 <summary>View the setup guide</summary>
 
-![MacLink setup: Google sign-in, DMG installation and device key import, permissions, access link creation, and the host email check.](docs/images/setup-flow-en.png)
+![MacLink setup: DMG installation, browser approval from the Connector, permissions, and same-account access from My devices on another computer.](docs/images/setup-flow-en.png)
 
 </details>
 
@@ -35,20 +37,17 @@ The downloadable Connector targets **Apple M-series Macs (Apple silicon, arm64)*
 
 Manage the connection from the MacLink icon in the macOS menu bar.
 
-![MacLink Connector 1.3.2 Home and Settings: connection status, permissions, device key import, and connection controls.](docs/images/connector-overview-en.png)
+![MacLink 1.4.0 automatic registration preview: Google connection and browser confirmation code.](docs/images/connector-registration-ko.png)
 
-*Home and Settings in Connector 1.3.2. Edited from English UI previews; the example states do not report live connections or permissions.*
+*Connector 1.4.0 Korean UI preview of automatic registration. The example code and status do not read live credentials, permissions or connections.*
 
 | Tab | What you can do |
 | --- | --- |
 | Home | Check server connection, session status, Screen Recording, and Device control; reconnect or stop the Connector. |
-| Settings | Import a device key, open logs, start or restart the Connector, enable launch at login, open macOS permission settings, and choose Korean or English. |
+| Settings | Connect with Google, open logs, start or restart the Connector, enable launch at login, open macOS permission settings, and choose Korean or English. Manual key import remains available for recovery. |
 
-**Device control** in MacLink corresponds to the macOS **Accessibility** permission. Screen Recording may appear as **Screen & System Audio Recording** on some macOS versions; that label does not mean MacLink streams audio.
+**Device control** in MacLink corresponds to the macOS **Accessibility** permission. Screen Recording may appear as **Screen & System Audio Recording** on some macOS versions; the Connector uses this permission for screen and system sound. It does not capture the microphone.
 
-![MacLink Settings at two scroll positions: import a connection key, start at login, manage Screen Recording and Device control, and select the display language.](docs/images/connector-settings-en.png)
-
-*Settings at two scroll positions: connect this Mac, control startup, open macOS permission settings, and choose a display language. These are edited UI previews.*
 
 To update, quit MacLink, replace the installed app with the newer DMG version, and reopen it. Device configuration is stored in `~/Library/Application Support/MacLink`. macOS may require you to grant permissions again after replacing a build.
 
@@ -60,8 +59,8 @@ Release builds currently use ad-hoc signatures and are not Developer ID signed o
 | --- | --- |
 | Browser access | View your Mac's primary display and send mouse and keyboard input without installing a remote client. |
 | Menu bar Connector | Manage connection, permissions, logs, and login startup from a native macOS app. |
-| Persistent access links | Reconnect using the same link until the owner revokes it. |
-| One-time invitations | Issue an invitation that expires after one hour and normally asks the Mac owner for approval. |
+| Account-based access | Only browsers signed in to the Google account that registered the Mac can connect. |
+| System sound | Send Mac system audio over WebRTC without capturing the microphone. |
 | View-only mode | Share the screen without granting mouse or keyboard control. |
 | WebRTC streaming | Use a direct connection or an optional TURN relay. |
 | Windows keyboard mapping | Map Windows Ctrl shortcuts to Mac Command or configure modifier keys individually. |
@@ -81,17 +80,19 @@ A comparison with selected single-user paid plans, using the Korean README's KRW
 | Unattended host devices | Up to 8 Macs per owner account | 3 | 100 |
 | Source and customization | Available under the [project license](LICENSE.md) | See vendor license terms | See vendor license terms |
 
-MacLink's free software price applies to permitted noncommercial use with attribution; commercial use requires separate written permission. Website hosting, storage, and optional TURN traffic may cost extra. MacLink currently provides one primary display and one remote user per Mac, without audio streaming or dedicated file transfer. See the [license](LICENSE.md), [device and session implementation](MackLink_Web/lib/server.ts), and [Limitations](#limitations).
+MacLink's free software price applies to permitted noncommercial use with attribution; commercial use requires separate written permission. Website hosting, storage, and optional TURN traffic may cost extra. MacLink currently provides one primary display and one remote user per Mac, with system audio but without dedicated file transfer. See the [license](LICENSE.md), [device and session implementation](MackLink_Web/lib/server.ts), and [Limitations](#limitations).
 
 ## Usage
 
-### Share an Access Link
+### Connect to Your Devices
 
-Choose **view-only** or **control** access when creating an invitation. Send the complete link, including the `#join=` fragment, and tell the recipient which email address the host uses to sign in. On the hosted site, this is the host's Google sign-in email.
+Open the [website](https://www.maclink.cloud/) on another computer and sign in to the **same Google account** used to register your Mac. Choose **Connect** on the online Mac under **My devices**, with view-only/control and connection-method options. There is no invitation issuance/input or separate host-email check.
 
-Persistent links have no expiry or usage limit until revoked, and do not ask for approval on the Mac each time. One-time invitations expire after one hour and normally require approval; the Connector can be configured to allow unattended requests.
+Use the sound button in the viewer to enable or mute system audio. If the browser blocks autoplay, click it to start playback. The Mac needs the updated Connector and **Screen & System Audio Recording** permission. The microphone is not transmitted.
 
-**Disconnect** ends the current session. To invalidate shared links and ongoing sessions, revoke access under **My Devices**. Removing a device also invalidates its device key.
+At **Ultra**, compatible browsers play uncompressed **48 kHz stereo, 32-bit float PCM**, using about **3.1 Mbps** in addition to video. Other presets and PCM fallback use music-oriented **192 kbps Opus**. The sound indicator shows the format actually playing. PCM preserves the captured samples without a lossy audio codec; macOS mixing/resampling, playback hardware and network loss can still affect what you hear. It does not copy the source music file bit for bit.
+
+**Disconnect** ends the current connection. **Sign out** or login expiry also ends connections bound to that login. Removing a device invalidates its Connector key and deletes related sessions.
 
 ### Keyboard, Quality, and Fullscreen
 
@@ -104,7 +105,7 @@ Open **Settings** in the remote viewer to configure keyboard mapping and capture
 | Fast / Medium / Sharp / Ultra | Select capture and WebRTC encoder targets; actual quality depends on hardware, network, and transport. |
 | Fullscreen | Show the remote display; press Escape to return to the toolbar. |
 
-Shortcuts reserved by the local operating system or browser may be intercepted before MacLink receives them. Refreshing the same browser tab can recover a session using that tab's session storage; another browser or tab needs the invitation again.
+Shortcuts reserved by the local operating system or browser may be intercepted before MacLink receives them. Refreshing the same browser tab can recover a session using that tab's session storage; another browser or computer signs in to the same account and connects again under My devices.
 
 | Preset | Maximum capture width | Target frame rate | WebRTC encoder target / ceiling |
 | --- | --- | --- | --- |
@@ -138,7 +139,7 @@ The Connector itself currently uses STUN rather than native TURN. Browser-side T
 <details>
 <summary>View the connection architecture</summary>
 
-![MacLink architecture: HTTPS sign-in and signaling, with encrypted screen and input over direct WebRTC or optional TURN.](docs/images/architecture-en.png)
+![MacLink architecture: HTTPS sign-in and signaling, with encrypted screen, system sound and input over direct WebRTC or optional TURN.](docs/images/architecture-en.png)
 
 ![Connection selection: automatic WebRTC, one optional TURN/TLS 443 retry, and a failure notice if no route connects.](docs/images/connection-paths-en.png)
 
@@ -148,18 +149,18 @@ The Connector itself currently uses STUN rather than native TURN. Browser-side T
 
 | Area | Current behavior |
 | --- | --- |
-| Device ownership | Google OIDC sign-in protects device management. Owners are identified by Google `sub`; device, invitation, and session secrets are stored as hashes. |
-| Host email check | A valid invitation must match the host's Google sign-in email. This checks the intended host; it is **not multi-factor authentication** or proof of the visitor's identity. |
+| Device ownership | Google subject and device ownership are checked. Access requires a live login to the same account. Device/session secrets are stored as hashes. |
+| Login-session binding | Each remote session is bound to the Google login that created it. A session token alone grants no access, and sign-out or expiry revokes it. |
 | Access scope | The server and Connector enforce view-only versus control permissions. Native input also requires macOS Accessibility permission. |
-| Authorization refresh | Connector 1.3.2 normally polls every four seconds. After 17 seconds without fresh authorization, it pauses screen transmission and input. The peer can be retained for up to 30 seconds from the last confirmation. |
+| Authorization refresh | Connector 1.4.0 normally polls every four seconds. After 17 seconds without fresh authorization, it pauses screen/system-sound transmission and input. The peer can be retained for up to 30 seconds from the last confirmation. |
 | Revocation and recovery | Explicit revocation, a replaced session/generation, or lost macOS permissions closes the old connection. Resuming requires fresh authorization for the current session. |
-| WebRTC | Video and input use encrypted WebRTC transport. |
-| Local credentials | The imported device key is stored under `~/Library/Application Support/MacLink`; treat it like a password. Remote text is not written to Connector logs. |
+| WebRTC | Video, system sound and input use encrypted WebRTC transport. |
+| Local credentials | The automatically configured device key is stored under `~/Library/Application Support/MacLink`; treat it like a password. Remote text is not written to Connector logs. |
 
-Google sign-in does not automatically link a previous account by matching email addresses. To bring a legacy device into your current Google account, choose **My Devices → Import device with an existing key**, select its connection-key JSON, and confirm. The device’s previous invitations and sessions end, so create new invitation links. A key cannot import a device owned by a different Google account. Previous account TURN settings are not copied; configure TURN again in **Connection Settings**.
+Google sign-in does not automatically link a previous account by matching email addresses. To bring a legacy device into your current Google account, choose **My Devices → Import device with an existing key**, select its connection-key JSON, and confirm. The device’s previous sessions end; connect again from My devices. A key cannot import a device owned by a different Google account. Previous account TURN settings are not copied; configure TURN again in **Connection Settings**.
 
 
-Keep device keys, access links, session tokens, and TURN secrets private. Anyone holding a persistent invitation and knowing the host email may connect without another approval on the Mac. Use view-only access when control is unnecessary, and revoke access when sharing ends.
+Protect your Google account, device keys, session tokens and TURN secrets. Public links or email addresses alone grant no access. Choose view-only when control is unnecessary, and disconnect or sign out when finished.
 
 Owner sign-in uses Google OpenID Connect with `state`, `nonce`, and PKCE. The server issues an opaque `HttpOnly` session cookie; Google `sub` identifies the owner. Sign-out uses a same-origin `POST /auth/signout` with an `Origin` check. When deploying your own server, configure the server-only `TURN_CONFIG_KEY` as a secure random 64-character hexadecimal value and keep it stable so saved TURN credentials remain decryptable.
 
@@ -234,23 +235,23 @@ After changing Connector source, synchronize the distribution copies with `pytho
 
 | Symptom | What to check |
 | --- | --- |
-| Mac stays offline | Start the Connector, check its log, and confirm that the imported key belongs to the registered device and website. |
+| Mac is waiting for setup or stays offline | Finish browser approval from **Connect with Google** in the Connector. For an existing registration, check the Connector status and log; starting it does not attach a different newly created device. |
 | Another Connector is running | Stop the older Terminal or login-service instance before starting the menu bar app. |
 | Permission still says required | Check the installed MacLink app in macOS Privacy & Security, then quit and reopen it. An older app entry may need to be removed and the current copy added again. |
 | Screen works but input does not | Confirm control access and MacLink's Accessibility permission. Check keyboard input separately from mouse clicks. |
-| Invitation is rejected | Use the complete link/code and the host's Google sign-in email. Ask the owner for a fresh invitation if access was revoked or expired. |
+| Device missing or access denied | Sign in again to the Google account that registered the Mac and check that its Connector is online. |
 | Connection repeatedly recovers | Check that the website and Connector are compatible, inspect the Connector log, and copy the viewer's connection diagnostics. |
 | Access fails after reboot | Unlock FileVault and log in on the Mac; check login startup, power, network, and permissions. |
 
 ## Limitations
 
-MacLink currently supports one primary display and one remote user per Mac. Audio streaming, dedicated file transfer, multi-monitor switching, Wake-on-LAN, and pre-login/FileVault control are not implemented. Access to a locked Mac is not guaranteed. A sleeping or logged-out Mac cannot be reached through the Connector, and no commercial support SLA is provided.
+MacLink currently supports one primary display and one remote user per Mac. Dedicated file transfer, multi-monitor switching, Wake-on-LAN, and pre-login/FileVault control are not implemented. Access to a locked Mac is not guaranteed. A sleeping or logged-out Mac cannot be reached through the Connector, and no commercial support SLA is provided.
 
 ## Contributing
 
 Help improve MacLink through code, design, translation, documentation, or reproducible bug reports.
 
-Remove device keys, invitation links, session tokens, and private screen content before sharing logs or screenshots. Report security issues privately to the maintainer rather than posting working credentials or exploit details in a public issue.
+Remove device keys, session tokens, and private screen content before sharing logs or screenshots. Report security issues privately to the maintainer rather than posting working credentials or exploit details in a public issue.
 
 ## Community
 

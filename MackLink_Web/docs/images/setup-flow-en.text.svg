@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1300" viewBox="0 0 1760 1300" role="img" aria-labelledby="title desc">
+<title id="title">MacLink setup flow</title><desc id="desc">Mac registration, permissions, same Google account sign-in and My devices remote access.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA58C"/></marker><marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087A59"/></marker></defs>
+<rect x="0" y="0" width="1760" height="1300" rx="0" fill="#F6F7F2"/>
+<text x="80" y="70" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="start">GETTING STARTED</text>
+<text x="80" y="134" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="46" font-weight="700" text-anchor="start">Register your Mac. Sign in anywhere.</text>
+<text x="80" y="183" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="24" font-weight="400" text-anchor="start">The Mac runs a native Connector; the remote user only needs a supported browser.</text>
+<rect x="80" y="250" width="740" height="280" rx="26" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="112" y="278" width="74" height="42" rx="21" fill="#EAF2E5"/>
+<text x="149.0" y="307" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">01</text>
+<rect x="940" y="250" width="740" height="280" rx="26" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="972" y="278" width="74" height="42" rx="21" fill="#EAF2E5"/>
+<text x="1009.0" y="307" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">02</text>
+<rect x="940" y="630" width="740" height="280" rx="26" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="972" y="658" width="74" height="42" rx="21" fill="#EAF2E5"/>
+<text x="1009.0" y="687" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">03</text>
+<rect x="80" y="630" width="740" height="280" rx="26" fill="#FFFFFF" stroke="#D9E2D7" stroke-width="2"/>
+<rect x="112" y="658" width="74" height="42" rx="21" fill="#EAF2E5"/>
+<text x="149.0" y="687" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="19" font-weight="700" text-anchor="middle">04</text>
+<rect x="717" y="282" width="54" height="39" rx="5" fill="none" stroke="#087A59" stroke-width="2"/>
+<path d="M 717 321 L 710 331 H 778 L 771 321" fill="none" stroke="#087A59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1577" y="282" width="54" height="39" rx="5" fill="none" stroke="#087A59" stroke-width="2"/>
+<path d="M 1577 321 L 1570 331 H 1638 L 1631 321" fill="none" stroke="#087A59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1582 704 C 1562 699 1569 677 1587 680 C 1592 658 1624 658 1628 681 C 1651 679 1656 707 1635 707 H 1582" fill="none" stroke="#087A59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="710" y="662" width="68" height="48" rx="8" fill="none" stroke="#087A59" stroke-width="2"/>
+<path d="M 710 676 H 778" fill="none" stroke="#087A59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="719" cy="669" r="2" fill="#087A59"/>
+<circle cx="728" cy="669" r="2" fill="#087A59"/>
+<circle cx="737" cy="669" r="2" fill="#087A59"/>
+<text x="112" y="378" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="32" font-weight="700" text-anchor="start">Register your Mac</text>
+<text x="112" y="427" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Sign in with Google at www.maclink.cloud.</text>
+<text x="112" y="465" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Add your Mac; download the DMG and device key.</text>
+<text x="112" y="503" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Keep the device key on your own Mac.</text>
+<text x="972" y="378" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="32" font-weight="700" text-anchor="start">Install and connect</text>
+<text x="972" y="427" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Install the DMG app in Applications and launch it.</text>
+<text x="972" y="465" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Import the device key in Settings.</text>
+<text x="972" y="503" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Allow Screen/audio recording and Device control.</text>
+<text x="972" y="758" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="32" font-weight="700" text-anchor="start">Sign in on another computer</text>
+<text x="972" y="807" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="23" font-weight="400" text-anchor="start">Open www.maclink.cloud in a browser.</text>
+<text x="972" y="845" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="23" font-weight="400" text-anchor="start">Sign in to the same Google account.</text>
+<text x="972" y="883" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="23" font-weight="400" text-anchor="start">Your registered Macs appear in My devices.</text>
+<text x="112" y="758" fill="#1D3830" font-family="DejaVu Sans,sans-serif" font-size="32" font-weight="700" text-anchor="start">Connect from My devices</text>
+<text x="112" y="807" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="23" font-weight="400" text-anchor="start">Choose Connect on your online Mac.</text>
+<text x="112" y="845" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="23" font-weight="400" text-anchor="start">Select view-only or control mode.</text>
+<text x="112" y="883" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="23" font-weight="400" text-anchor="start">Receive the screen and system sound.</text>
+<path d="M 820 390 H 940" fill="none" stroke="#087A59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowGreen)"/>
+<path d="M 1310 530 V 630" fill="none" stroke="#087A59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowGreen)"/>
+<path d="M 940 770 H 820" fill="none" stroke="#087A59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowGreen)"/>
+<rect x="80" y="960" width="1600" height="185" rx="24" fill="#EAF2E5"/>
+<text x="112" y="1008" fill="#087A59" font-family="DejaVu Sans,sans-serif" font-size="27" font-weight="700" text-anchor="start">Only the same signed-in Google account can connect.</text>
+<text x="112" y="1051" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Keep the Mac awake, logged in, online and running the Connector with permissions enabled.</text>
+<text x="112" y="1085" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Optional: enable Start MacLink at login in Settings.</text>
+<text x="112" y="1119" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="22" font-weight="400" text-anchor="start">Sign out, disconnect or stop the Connector to end remote access.</text>
+<path d="M 80 1206 H 1680" fill="none" stroke="#D9E2D7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="80" y="1241" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="400" text-anchor="start">MacLink · fivebellhyun · 1.3.2</text>
+<text x="1680" y="1241" fill="#617469" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="400" text-anchor="end">Schematic  /  03</text>
+</svg>

@@ -39,7 +39,7 @@ class SVG:
  def footer(self,n):
   y=self.h-64
   self.path(f'M 80 {y-30} H 1680',C['border'],2,False)
-  self.text(80,y+5,'MacLink · fivebellhyun · 1.3.2',18,C['muted'])
+  self.text(80,y+5,'MacLink · fivebellhyun · 1.4.0',18,C['muted'])
   self.text(1680,y+5,('구조도' if self.lang=='ko' else 'Schematic')+f'  /  {n:02d}',18,C['muted'],anchor='end')
  def browser_icon(self,x,y,color=None):
   color=color or C['green']
@@ -65,24 +65,24 @@ class SVG:
 def architecture(lang):
  ko=lang=='ko'
  d=SVG(1190,lang,'MacLink architecture' if not ko else 'MacLink 시스템 구조','MacLink browser, coordination API and Mac Connector, with encrypted direct WebRTC or optional TURN transport.')
- d.header('SYSTEM ARCHITECTURE' if not ko else '시스템 구조', 'One link. Encrypted WebRTC.' if not ko else '링크 하나로 연결하는 암호화된 WebRTC.', 'The website coordinates access. Screen and input use direct WebRTC or optional TURN.' if not ko else '웹사이트가 접속을 조정하고, 화면과 입력은 직접 WebRTC 또는 선택적 TURN으로 전송합니다.')
+ d.header('SYSTEM ARCHITECTURE' if not ko else '시스템 구조', 'Your account. Encrypted WebRTC.' if not ko else '내 계정으로 연결하는 암호화된 WebRTC.', 'Sign in to the same Google account. Screen, sound and input use WebRTC or optional TURN.' if not ko else '같은 Google 계정으로 접속하며, 화면·소리·입력은 WebRTC 또는 선택적 TURN으로 전송합니다.')
  xs=[80,650,1220];w=460
  for x in xs:d.rect(x,240,w,330,26,C['white'],C['border'])
  d.browser_icon(114,272);d.cloud_icon(684,272);d.laptop_icon(1254,272)
  d.text(114,367,'Remote browser' if not ko else '원격 사용자 브라우저',29,weight=700)
- d.lines(114,415,['Opens an access link','Displays screen / sends input','No viewer app installation'] if not ko else ['접속 링크 열기','화면 표시 / 키보드·마우스 입력','별도 뷰어 프로그램 설치 불필요'],23,40,C['muted'])
+ d.lines(114,415,['Same Google account','Connects under My devices','Screen, system sound and input'] if not ko else ['같은 Google 계정으로 로그인','내 기기에서 연결 버튼 선택','화면·시스템 소리·입력 전달'],23,40,C['muted'])
  d.text(684,367,'www.maclink.cloud',29,weight=700)
  d.lines(684,415,['Google sign-in + signalling','Authorization checks every 4s','D1: accounts, devices, sessions'] if not ko else ['Google 로그인 · 연결 정보 교환','4초 간격 접속 권한 확인','D1: 계정 · 기기 · 세션'],22,40,C['muted'])
  d.text(1254,367,'Mac + Connector',27,weight=700)
- d.lines(1254,415,['Native macOS menu bar app','Screen capture + native input','Screen Recording + Device control'] if not ko else ['macOS 메뉴 막대 앱','화면 캡처 + macOS 입력 실행','화면 기록 · 기기 제어 권한'],22,40,C['muted'])
+ d.lines(1254,415,['Native macOS menu bar app','Screen + system sound + input','Screen/audio + Device control'] if not ko else ['macOS 메뉴 막대 앱','화면·시스템 소리 캡처 + 입력 실행','화면·오디오 기록 / 기기 제어'],22,40,C['muted'])
  d.path('M 540 348 H 650',both=True)
  d.path('M 1110 348 H 1220',both=True)
  d.text(595,320,'HTTPS',17,C['muted'],anchor='middle');d.text(1165,320,'HTTPS',17,C['muted'],anchor='middle')
- d.text(80,626,'SCREEN + INPUT TRANSPORTS' if not ko else '화면과 입력의 전송 경로',20,C['green'],700)
+ d.text(80,626,'SCREEN + SOUND + INPUT' if not ko else '화면·소리·입력의 전송 경로',20,C['green'],700)
  rows=[(656,152),(830,204)]
  for y,h in rows:d.rect(80,y,1600,h,24,C['white'],C['border'])
  d.badge(110,684,'01');d.text(210,702,'Direct WebRTC' if not ko else 'WebRTC 직접 연결',29,weight=700)
- d.text(210,750,'Encrypted video + input data channel' if not ko else '암호화된 영상 + 입력 데이터 채널',23,C['muted'])
+ d.text(210,750,'Encrypted video/audio + control data' if not ko else '암호화된 영상·소리 + 입력 데이터 채널',23,C['muted'])
  d.text(910,719,'Browser' if not ko else '브라우저',25,weight=700,anchor='middle')
  d.text(1510,719,'Mac',25,weight=700,anchor='middle')
  d.path('M 1020 710 H 1390',C['green'],4,both=True)
@@ -115,7 +115,7 @@ def connection_paths(lang):
  for x in xs[:2]:d.path(f'M {x+230} 625 V 704',C['green'],3)
  for x in xs:d.rect(x,720,ww,180,24,C['light'] if x!=1220 else C['pale'])
  d.text(112,766,'Connected by WebRTC' if not ko else 'WebRTC로 연결',25,C['green'],700)
- d.lines(112,813,['Direct or TURN-relayed','Video + control data channel'] if not ko else ['직접 연결 또는 TURN 중계 연결','영상 + 제어 데이터 채널'],21,37,C['muted'])
+ d.lines(112,813,['Direct or TURN-relayed','Video + system sound + control data'] if not ko else ['직접 연결 또는 TURN 중계 연결','영상·시스템 소리 + 제어 데이터 채널'],21,37,C['muted'])
  d.text(682,766,'Connected via TURN/TLS' if not ko else 'TURN/TLS로 연결',24,C['green'],700)
  d.lines(682,813,['Browser-to-TURN uses TLS 443','The Mac must still be reachable.'] if not ko else ['브라우저 → TURN 구간은 TLS 443','Mac 측 연결 경로도 필요합니다.'],21,37,C['muted'])
  d.text(1252,766,'Review network settings' if not ko else '네트워크 설정 확인',25,C['amber'],700)
@@ -127,26 +127,26 @@ def connection_paths(lang):
 
 def setup_flow(lang):
  ko=lang=='ko'
- d=SVG(1300,lang,'MacLink setup flow' if not ko else 'MacLink 초기 설정 흐름','Four-step setup with Mac registration, one-time permissions, permanent link creation and remote browser access.')
- d.header('GETTING STARTED' if not ko else '시작하기','Set up once. Reconnect with your link.' if not ko else '처음에 설정하고, 이후에는 링크로 다시 접속하세요.','The Mac runs a native Connector; the remote user only needs a supported browser.' if not ko else 'Mac은 Connector를 실행하고, 원격 사용자는 지원되는 브라우저에서 접속합니다.')
+ d=SVG(1300,lang,'MacLink setup flow' if not ko else 'MacLink 초기 설정 흐름','Mac registration, permissions, same Google account sign-in and My devices remote access.')
+ d.header('GETTING STARTED' if not ko else '시작하기','Register your Mac. Sign in anywhere.' if not ko else 'Mac을 등록하고, 같은 계정으로 접속하세요.','The Mac runs a native Connector; the remote user only needs a supported browser.' if not ko else 'Mac은 Connector를 실행하고, 원격 사용자는 지원되는 브라우저에서 접속합니다.')
  cards=[(80,250,1),(940,250,2),(940,630,3),(80,630,4)]
  for x,y,n in cards:
   d.rect(x,y,740,280,26,C['white'],C['border']);d.badge(x+32,y+28,f'0{n}')
  d.laptop_icon(710,282);d.laptop_icon(1570,282);d.cloud_icon(1570,662);d.browser_icon(710,662)
- d.text(112,378,'Register your Mac' if not ko else 'Mac을 등록합니다',32,weight=700)
- d.lines(112,427,['Sign in with Google at www.maclink.cloud.','Add your Mac; download the DMG and device key.','Keep the device key on your own Mac.'] if not ko else ['www.maclink.cloud에서 Google로 로그인합니다.','Mac 등록 후 DMG와 기기 연결 키를 내려받습니다.','기기 연결 키는 자신의 Mac에 보관합니다.'],22,38,C['muted'])
- d.text(972,378,'Install and connect' if not ko else '앱을 설치하고 연결합니다',32,weight=700)
- d.lines(972,427,['Install the DMG app in Applications and launch it.','Import the device key in Settings.','Allow Screen Recording and Device control.'] if not ko else ['DMG의 앱을 응용 프로그램에 설치·실행합니다.','설정에서 기기 연결 키를 가져옵니다.','화면 기록 · 기기 제어 권한을 허용합니다.'],22,38,C['muted'])
- d.text(972,758,'Create a permanent link' if not ko else '상시 접속 링크를 만듭니다',32,weight=700)
- d.lines(972,807,['Confirm your Mac shows Online.','Create a view-only or control access link.','Share only with people you authorize.'] if not ko else ['Mac 상태가 온라인인지 확인합니다.','보기 전용 또는 제어 권한의 링크를 만듭니다.','접속을 허용할 사람에게만 전달합니다.'],23,38,C['muted'])
- d.text(112,758,'Connect in the browser' if not ko else '브라우저로 원격 접속합니다',32,weight=700)
- d.lines(112,807,['Open the link in a compatible browser.','Enter the host\'s Google sign-in email.','Choose a connection mode and quality.'] if not ko else ['원격 기기의 브라우저에서 링크를 엽니다.','호스트의 Google 로그인 이메일을 입력합니다.','연결 방식과 화면 화질을 선택합니다.'],23,38,C['muted'])
+ d.text(112,378,'Install the Connector' if not ko else '커넥터를 설치합니다',32,weight=700)
+ d.lines(112,427,['Download the DMG from www.maclink.cloud.','Move MacLink into Applications and launch it.','Choose Connect with Google in the Connector.'] if not ko else ['www.maclink.cloud에서 DMG를 내려받습니다.','MacLink를 응용 프로그램에 설치·실행합니다.','커넥터에서 Google 계정으로 연결을 누릅니다.'],22,38,C['muted'])
+ d.text(972,378,'Approve this Mac' if not ko else '브라우저에서 등록을 승인합니다',32,weight=700)
+ d.lines(972,427,['Sign in with Google; enter the Connector code.','Approve registration; the Connector applies it.','Allow Screen/audio recording and Device control.'] if not ko else ['Google 로그인 후 앱에 표시된 코드를 입력합니다.','등록을 승인하면 커넥터에 자동으로 적용됩니다.','화면·오디오 기록 / 기기 제어를 허용합니다.'],22,38,C['muted'])
+ d.text(972,758,'Sign in on another computer' if not ko else '다른 컴퓨터에서 로그인합니다',32,weight=700)
+ d.lines(972,807,['Open www.maclink.cloud in a browser.','Sign in to the same Google account.','Your registered Macs appear in My devices.'] if not ko else ['브라우저에서 www.maclink.cloud를 엽니다.','Mac을 등록한 Google 계정으로 로그인합니다.','내 기기에 등록된 Mac이 표시됩니다.'],23,38,C['muted'])
+ d.text(112,758,'Connect from My devices' if not ko else '내 기기에서 접속합니다',32,weight=700)
+ d.lines(112,807,['Choose Connect on your online Mac.','Select view-only or control mode.','Receive the screen and system sound.'] if not ko else ['온라인인 Mac에서 연결 버튼을 누릅니다.','보기 전용 또는 제어 범위를 선택합니다.','원격 화면과 시스템 소리가 전달됩니다.'],23,38,C['muted'])
  d.path('M 820 390 H 940',C['green'],4)
  d.path('M 1310 530 V 630',C['green'],4)
  d.path('M 940 770 H 820',C['green'],4)
  d.rect(80,960,1600,185,24,C['light'])
- d.text(112,1008,'Future access needs no repeated approval on the Mac.' if not ko else '이후에는 Mac에서 매번 승인하지 않아도 링크로 접속할 수 있습니다.',27,C['green'],700)
- d.lines(112,1051,['Keep the Mac awake, logged in, online and running the Connector with permissions enabled.','Optional: enable Start MacLink at login in Settings.','The owner can revoke access links or stop remote access at any time.'] if not ko else ['Mac이 깨어 있고 로그인·인터넷 연결 상태이며, 권한이 허용된 Connector가 실행 중이어야 합니다.','설정에서 로그인 시 MacLink 실행을 선택할 수 있습니다.','소유자는 접속 링크를 폐기하거나 원격 접속을 중지할 수 있습니다.'],22,34,C['muted'])
+ d.text(112,1008,'Only the same signed-in Google account can connect.' if not ko else '등록한 기기는 같은 Google 계정으로 로그인해야 접속할 수 있습니다.',27,C['green'],700)
+ d.lines(112,1051,['Keep the Mac awake, logged in, online and running the Connector with permissions enabled.','Optional: enable Start MacLink at login in Settings.','Sign out, disconnect or stop the Connector to end remote access.'] if not ko else ['Mac이 깨어 있고 로그인·인터넷 연결 상태이며, 권한이 허용된 Connector가 실행 중이어야 합니다.','설정에서 로그인 시 MacLink 실행을 선택할 수 있습니다.','로그아웃, 연결 종료 또는 커넥터 중지로 접속을 끝낼 수 있습니다.'],22,34,C['muted'])
  d.footer(3);d.save('setup-flow-'+lang)
 
 for lang in ['en','ko']:
