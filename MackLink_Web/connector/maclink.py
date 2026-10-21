@@ -7,6 +7,7 @@ from pathlib import Path
 from fractions import Fraction
 from protocol import KEYS, valid
 from quality import QualitySettings, prepare_capture
+from permission_monitor import PermissionMonitor
 from app_runtime import VERSION, InstanceLock, StatusPublisher, load_config
 
 def agent_request(client, action, url, **kwargs):
@@ -144,6 +145,8 @@ async def main(config_path,status_path=None):
  print('\nMacLink Connector '+VERSION+'\nDevice: '+str(config.get('name','MacBook'))+'\nStop: use the MacLink menu or press Ctrl+C in this Terminal window\n',flush=True)
  if not Q.CGPreflightScreenCaptureAccess():Q.CGRequestScreenCaptureAccess()
  if not AX.AXIsProcessTrusted():AX.AXIsProcessTrustedWithOptions({AX.kAXTrustedCheckOptionPrompt:True})
+ permissions=PermissionMonitor(Q.CGPreflightScreenCaptureAccess,AX.AXIsProcessTrusted,active=False)
+ permissions.refresh();permissions.start()
  quality=QualitySettings();controller=MacInput(Q,AX);loop=asyncio.get_running_loop();executor=concurrent.futures.ThreadPoolExecutor(max_workers=1);capture_state={}
  def capture():
   if not Q.CGPreflightScreenCaptureAccess():raise RuntimeError('Screen Recording permission is required. Grant permission, then restart the connector.')
@@ -154,18 +157,23 @@ async def main(config_path,status_path=None):
  state={'session':None,'pc':None,'ready':False,'setting':None,'channel':None,'track':None,'audio':None,'pcm':None,'audio_available':False,'audio_error':None,'owner':None,'paused':False,'encoding':None}
  authorization=SessionAuthorization();notices=set();notice_keys=set();retirements=set();stopping=asyncio.Event()
  publisher=StatusPublisher(status_path) if status_path else None
- status_connection='connecting';status_error='none';reported_session=None
+ status_connection='connecting';status_error='none';reported_session=None;reported_permissions=(False,False)
  def report(connection=None,error=None,session=None,update_session=False):
-  nonlocal status_connection,status_error,reported_session
+  nonlocal status_connection,status_error,reported_session,reported_permissions
   if connection is not None:status_connection=connection
   if error is not None:status_error=error
   if update_session:reported_session=session
   if publisher:
    s=state['session'] or reported_session
    label='paused' if s and state['paused'] else s.get('status','idle') if s else 'idle'
+   # Preserve the last observed permission labels during an unknown result.
+   # The paused session and fresh-only media gates still block all output.
+   sample=permissions.read()
+   if sample is not None:reported_permissions=sample
+   screen,accessible=reported_permissions
    try:publisher.publish(connection=status_connection,error=status_error,session=label,
-                         mode=s.get('mode') if s else None,screen=bool(Q.CGPreflightScreenCaptureAccess()),
-                         accessibility=bool(AX.AXIsProcessTrusted()))
+                         mode=s.get('mode') if s else None,screen=screen,
+                         accessibility=accessible)
    except (OSError,ValueError):log_event('Local status update failed')
  report()
 
@@ -190,14 +198,29 @@ async def main(config_path,status_path=None):
   def current(owner,session,pc=None):
    return not stopping.is_set() and owner is state['owner'] and session_key(session)==session_key(state['session']) and (pc is None or pc is state['pc'])
   def permitted(owner,session,pc=None):
-   return current(owner,session,pc) and state['ready'] and not state['paused'] and authorization.allows(session) and Q.CGPreflightScreenCaptureAccess() and (session['mode']!='control' or AX.AXIsProcessTrusted())
-  def pause_local():
+   # Every audio callback, media frame and control packet shares one bounded
+   # snapshot. Capture and MacInput.accept retain live checks at the operation.
+   return current(owner,session,pc) and state['ready'] and not state['paused'] and authorization.allows(session) and permissions.allows(session['mode']=='control')
+  def pause_local(reason='authorization'):
    if state['session'] and not state['paused']:
     state['paused']=True;controller.release()
     if state['track']:state['track'].pause()
     if state['audio']:state['audio'].pause()
     if state['pcm']:state['pcm'].pause()
-    log_event('Authorization paused; peer retained',generation=state['session'].get('generation',0));report()
+    log_event('Local permission check pending; peer retained' if reason=='permission' else 'Authorization paused; peer retained',generation=state['session'].get('generation',0));report()
+  def resume_local():
+   session=state['session']
+   if session and state['paused'] and current(state['owner'],session,state['pc']) and authorization.allows(session) and permissions.allows(session['mode']=='control'):
+    state['paused']=False
+    if state['track']:state['track'].resume()
+    if state['audio']:state['audio'].resume()
+    log_event('Authorization and local permissions restored; existing peer resumed',generation=session.get('generation',0))
+  async def active_permissions(session):
+   while True:
+    permissions.set_active(True)
+    permission=permissions.decision(session['mode']=='control')
+    if permission is not None:return permission
+    pause_local('permission');await asyncio.sleep(.025)
   def retire_peer(pc):
    async def close_peer():
     try:await pc.close()
@@ -206,6 +229,7 @@ async def main(config_path,status_path=None):
    task=asyncio.create_task(close_peer());retirements.add(task);task.add_done_callback(retirements.discard)
   async def close_local(expected=None):
    await close_attachment(state,authorization,controller,quality,expected,retire_peer)
+   if state['session'] is None:permissions.set_active(False)
   def notify(action,session,**body):
    # Mutations must not hold the authorization heartbeat behind a 12s request.
    key=(action,session_key(session))
@@ -227,7 +251,8 @@ async def main(config_path,status_path=None):
     if not current(owner,s):return
     pc=RTCPeerConnection(RTCConfiguration(iceServers=[RTCIceServer(urls='stun:stun.cloudflare.com:3478')]))
     state['pc']=pc;controller.seq=0;controller.last_packet=time.monotonic()
-    pcm=SystemPCMSender(gate=lambda:quality.name=='ultra' and pc.connectionState=='connected' and permitted(owner,s,pc))
+    pcm=SystemPCMSender(gate=lambda:quality.name=='ultra' and pc.connectionState=='connected' and permitted(owner,s,pc),
+                        audio_gate=lambda:pc.connectionState=='connected' and permitted(owner,s,pc))
     state['pcm']=pcm
     @pc.on('datachannel')
     def channel_open(channel):
@@ -236,7 +261,7 @@ async def main(config_path,status_path=None):
       if not pcm.attach(channel):return
       @channel.on('message')
       def audio_message(raw):
-       if current(owner,s,pc):pcm.receive(raw)
+       if current(owner,s,pc) and pcm.channel is channel:pcm.receive(raw)
       @channel.on('close')
       def audio_closed():pcm.detach(channel)
       return
@@ -248,7 +273,9 @@ async def main(config_path,status_path=None):
       try:
        event=json.loads(raw)
        if event.get('type')=='ping':controller.last_packet=time.monotonic();channel.send(json.dumps({'type':'pong','t':event.get('t',0)}))
-       else:controller.accept(event,s['mode']=='control')
+       # Never substitute the shared snapshot for an actual input operation's
+       # live screen/accessibility checks. Pings require no native API call.
+       elif valid(event) and Q.CGPreflightScreenCaptureAccess():controller.accept(event,s['mode']=='control')
       except Exception:
        if current(owner,s,pc):controller.release()
      @channel.on('close')
@@ -271,7 +298,8 @@ async def main(config_path,status_path=None):
       state['audio_available']=available;state['audio_error']=error
       if not available:pcm.pause()
       log_event('System audio status',available=available,error=error or 'none')
-    audio=SystemAudioTrack(gate=lambda:permitted(owner,s,pc),status=audio_status,pcm=pcm.send)
+    audio=SystemAudioTrack(gate=lambda:permitted(owner,s,pc),status=audio_status,pcm=pcm.send,pcm_demand=pcm.wants_frames)
+    pcm.audio_state=audio.set_enabled
     state['audio']=audio;audio_sender=pc.addTrack(audio)
     audio_transceiver=next(item for item in pc.getTransceivers() if item.sender is audio_sender)
     audio_transceiver.setCodecPreferences([codec for codec in RTCRtpSender.getCapabilities('audio').codecs if codec.mimeType.lower()=='audio/opus'])
@@ -298,7 +326,12 @@ async def main(config_path,status_path=None):
    while not stopping.is_set():
     poll_started=time.monotonic()
     try:
-     screen=bool(Q.CGPreflightScreenCaptureAccess());accessibility=bool(AX.AXIsProcessTrusted())
+     sample=permissions.read()
+     if sample is None:
+      # Unknown is not an actual native revocation. The media gates already
+      # fail closed; retain the peer and let the lease expire if checks hang.
+      pause_local('permission');await asyncio.sleep(.05);continue
+     screen,accessibility=sample
      info={'screen':screen,'accessibility':accessibility,'version':VERSION,'qualityControl':True,
            'audioSupported':audio_supported,'audioAvailable':bool(state['audio_available'] and state['session'] and authorization.allows(state['session'])),
            'audioError':'permission' if not screen else state['audio_error'] if audio_supported else 'unavailable'}
@@ -313,12 +346,20 @@ async def main(config_path,status_path=None):
      if state['session'] and not authorization.allows(state['session']):pause_local()
      authorization.confirm(s);failures=0
      if not connected:log_event('Connected to the server');connected=True
-     if s and s['status'] in ('approved','active') and (not Q.CGPreflightScreenCaptureAccess() or (s['mode']=='control' and not AX.AXIsProcessTrusted())):
-      notify('end',s,reason='Screen Recording or Accessibility permission was revoked on the MacBook.')
-      await close_local();s=None
+     if s and s['status'] in ('approved','active'):
+      # Activating the faster watcher invalidates idle grants. Wait for its
+      # first result rather than rejecting a newly approved session as revoked.
+      if not await active_permissions(s):
+       notify('end',s,reason='Screen Recording or Accessibility permission was revoked on the MacBook.')
+       await close_local();s=None
      if s and state['session'] and session_key(s)!=session_key(state['session']):
       await close_local();authorization.confirm(s)
+      # Closing the old attachment selected idle cadence. The replacement
+      # needs a new active sample, even when both sessions use the same mode.
+      if not await active_permissions(s):
+       notify('end',s,reason='Screen Recording or Accessibility permission was revoked on the MacBook.');s=None
      if not s:
+      permissions.set_active(False)
       if state['session'] or state['pc']:
        await close_local();log_event('Connection ended; waiting for a new connection')
      elif s['status']=='approved' and not state['pc'] and (state['setting'] is None or state['setting'].done()):
@@ -330,11 +371,7 @@ async def main(config_path,status_path=None):
       else:
        state['session']=s;quality.select(s.get('quality','balanced'),state['track'])
        if state['pcm']:state['pcm'].sync()
-       if state['paused']:
-        state['paused']=False
-        if state['track']:state['track'].resume()
-        if state['audio']:state['audio'].resume()
-        log_event('Authorization restored; existing peer resumed',generation=s.get('generation',0))
+       resume_local()
      report(connection='online',error='none',session=s,update_session=True)
     except asyncio.CancelledError:raise
     except Exception as error:
@@ -350,17 +387,21 @@ async def main(config_path,status_path=None):
     if time.monotonic()-controller.last_packet>1.5:controller.release()
     session=state['session']
     if session:
-     if not Q.CGPreflightScreenCaptureAccess() or (session['mode']=='control' and not AX.AXIsProcessTrusted()):
+     permission=permissions.decision(session['mode']=='control')
+     if permission is False:
       notify('end',session,reason='Screen Recording or Accessibility permission was revoked on the MacBook.')
       await close_local();log_event('Local permission revoked; connection closed')
      elif not authorization.allows(session):
       pause_local()
       if not authorization.retain(session):
        await close_local();log_event('Authorization recovery timed out; peer closed')
+     elif permission is None:pause_local('permission')
+     else:resume_local()
     report()
     await asyncio.sleep(0.25)
   tasks=[asyncio.create_task(poll()),asyncio.create_task(watchdog())]
-  log_event('Connecting to the server',screen=bool(Q.CGPreflightScreenCaptureAccess()),input=bool(AX.AXIsProcessTrusted()))
+  screen,accessible=permissions.snapshot()
+  log_event('Connecting to the server',screen=screen,input=accessible)
   try:await stopping.wait()
   finally:
    old_session=state['session'];authorization.revoke();controller.release()
@@ -377,6 +418,7 @@ async def main(config_path,status_path=None):
     with contextlib.suppress(Exception):await api('recover',{'session':old_session['id'],'generation':old_session.get('generation',0)})
    caffeinate.terminate();executor.shutdown(wait=False,cancel_futures=True);log_event('MacLink stopped; all input keys released')
    report(connection='error' if status_error=='revoked' else 'stopped',session=None,update_session=True)
+   permissions.stop()
    lock.release()
 
 if __name__=='__main__':

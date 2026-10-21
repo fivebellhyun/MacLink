@@ -60,17 +60,17 @@ class SystemAudioTrack(AudioStreamTrack):
  """20 ms stereo audio with a bounded queue and the screen's permission lease."""
  rate=48000
  samples=960
- def __init__(self,gate=None,capture_factory=None,status=None,pcm=None,clock=None,sleep=None):
+ def __init__(self,gate=None,capture_factory=None,status=None,pcm=None,clock=None,sleep=None,pcm_demand=None):
   super().__init__()
   if capture_factory is None:
    from system_audio import ScreenAudioCapture
    capture_factory=ScreenAudioCapture
   self.gate=gate or (lambda:True);self.factory=capture_factory;self.status=status or (lambda available,error:None)
-  self.pcm=pcm;self.clock=clock or time.monotonic;self.sleep=sleep or asyncio.sleep
+  self.pcm=pcm;self.pcm_demand=pcm_demand;self.clock=clock or time.monotonic;self.sleep=sleep or asyncio.sleep
   self.loop=asyncio.get_running_loop();self.changed=asyncio.Event();self.lock=threading.Lock();self.queue=deque(maxlen=5)
-  self.capture=None;self.starting=None;self.started=False;self.failed=False;self.paused=False;self.revision=0;self.notified=False
+  self.capture=None;self.starting=None;self.started=False;self.failed=False;self.paused=False;self.enabled=True;self.revision=0;self.capture_generation=0;self.notified=False
   self.resampler=AudioResampler(format='s16',layout='stereo',rate=self.rate);self.fifo=AudioFifo();self.pcm_fifo=AudioFifo();self.fifo_at=0;self.pts=0;self.origin=self.clock();self.last=None;self.deadline=None
- def permitted(self):return self.readyState=='live' and not self.paused and self.gate()
+ def permitted(self):return self.readyState=='live' and self.enabled and not self.paused and self.gate()
  def _wake(self):
   self.notified=False;self.changed.set()
  def push(self,frame,revision=None):
@@ -103,13 +103,25 @@ class SystemAudioTrack(AudioStreamTrack):
   self._flush();self.changed.set()
  def resume(self):
   if self.readyState=='live':self.paused=False;self.changed.set()
+ def set_enabled(self,enabled):
+  """Mute stops native capture and RTP production, rather than sending silence."""
+  if type(enabled) is not bool or self.readyState!='live':return False
+  if enabled==self.enabled:return True
+  self.enabled=enabled;self.revision+=1
+  if not enabled:
+   self.capture_generation+=1;self.started=False;self.failed=False
+   if self.starting:self.starting.cancel()
+   if self.capture:self.capture.close()
+   self.status(False,None)
+  self._flush();self.changed.set()
+  return True
  def stop(self):
   self.revision+=1;super().stop();self._flush();self.changed.set()
   if self.starting:self.starting.cancel()
   if self.capture:self.capture.close()
- def capture_failed(self,reason):
+ def capture_failed(self,reason,generation=None):
   def failed():
-   if self.readyState!='live':return
+   if self.readyState!='live' or (generation is not None and generation!=self.capture_generation):return
    self.failed=True;self._flush();self.status(False,reason)
    if self.capture:self.capture.close()
    self.changed.set()
@@ -121,22 +133,32 @@ class SystemAudioTrack(AudioStreamTrack):
  async def recv(self):
   while self.readyState=='live':
    if not self.permitted():
-    self._flush();await self._wait();continue
+    if self.last is not None or self.fifo.samples or self.pcm_fifo.samples or self.queue:self._flush()
+    await self._wait();continue
    if not self.started:
-    self.started=True;self.capture=self.factory(self.push,self.permitted,self.capture_failed,lambda:self.revision)
+    self.started=True;generation=self.capture_generation
+    def deliver(frame,revision=None,captured_generation=generation):
+     if captured_generation==self.capture_generation:self.push(frame,revision)
+    capture=self.factory(deliver,lambda captured_generation=generation:captured_generation==self.capture_generation and self.permitted(),lambda reason,captured_generation=generation:self.capture_failed(reason,captured_generation),lambda:self.revision)
+    self.capture=capture
+    starting=asyncio.create_task(capture.start());self.starting=starting
     try:
-     self.starting=asyncio.create_task(self.capture.start());await self.starting
+     await starting
      if self.readyState!='live':raise MediaStreamError
-     if not self.failed:self.status(True,None)
+     if generation!=self.capture_generation:continue
+     if not self.failed and self.permitted():self.status(True,None)
     except asyncio.CancelledError:
-     self.capture.close()
+     capture.close()
      if self.readyState!='live':raise MediaStreamError
+     if generation!=self.capture_generation:continue
      raise
     except MediaStreamError:raise
     except Exception as error:
      reason=getattr(error,'reason','capture-failed')
-     self.failed=True;self.capture.close();self.status(False,reason if reason in ('permission','unavailable','capture-failed') else 'capture-failed')
-    finally:self.starting=None
+     if generation==self.capture_generation:
+      self.failed=True;capture.close();self.status(False,reason if reason in ('permission','unavailable','capture-failed') else 'capture-failed')
+    finally:
+     if self.starting is starting:self.starting=None
    if self.failed:await self._wait();continue
    revision=self.revision
    # Pace against a sample deadline, not the previous actual return. Otherwise
@@ -154,19 +176,21 @@ class SystemAudioTrack(AudioStreamTrack):
    if now-deadline>.1:
     self._flush();deadline=now
    self.deadline=deadline+interval
-   if now-self.fifo_at>.15:self.fifo=AudioFifo();self.pcm_fifo=AudioFifo()
+   if now-self.fifo_at>.15 and (self.fifo.samples or self.pcm_fifo.samples):self.fifo=AudioFifo();self.pcm_fifo=AudioFifo()
+   wants_pcm=self.pcm is not None and (self.pcm_demand is None or self.pcm_demand())
+   if not wants_pcm and self.pcm_fifo.samples:self.pcm_fifo=AudioFifo()
    while self.fifo.samples<self.samples:
     with self.lock:item=self.queue.popleft() if self.queue else None
     if item is None:break
     captured_revision,captured_at,frame=item
     if captured_revision!=revision or self.clock()-captured_at>.15:continue
     frame.pts=None
-    if self.pcm:self.pcm_fifo.write(frame)
+    if wants_pcm:self.pcm_fifo.write(frame)
     for converted in self.resampler.resample(frame):
      converted.pts=None;self.fifo.write(converted)
     self.fifo_at=captured_at
    if revision!=self.revision or not self.permitted():self._flush();continue
-   if self.pcm:
+   if wants_pcm:
     # Raw float FIFO reads preserve source bits and share the RTP clock. When
     # ScreenCaptureKit omits silent buffers, supply only the missing zeros.
     try:self.pcm(self._twenty_ms(self.pcm_fifo,'fltp'))
