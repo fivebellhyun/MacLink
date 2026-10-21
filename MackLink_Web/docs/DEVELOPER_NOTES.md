@@ -46,6 +46,16 @@ The website has no frame upload/download, remote input queue or HTTPS media tran
 
 The last decoded frame is retained only in bounded browser memory during recovery. It is revealed/replaced based on actual decoded frames. Input releases on focus loss, transport loss, permission pause or session replacement. The browser's timer fallback for browsers without `requestVideoFrameCallback` is still required and is unrelated to a network relay.
 
+## Audio demand and input latency
+
+The viewer sends an exact `audio-state` request (`type`, boolean `enabled`, uint32 `revision`) over the existing audio data channel. The Connector acknowledges the same revision with `supported: true`; reordered requests cannot re-enable an older intent. Audio enable still requires the current authorized peer and fresh local permissions. Mute closes native system-audio capture, invalidates old capture callbacks, flushes buffers, and blocks audio frame production, stopping Opus encoding and RTP audio packets. Unmute starts a fresh capture. Opus-only playback does not prepare the unused float PCM FIFO. The regular sound button controls mute; PCM has its own explicit gesture button so unmuting does not unexpectedly add PCM traffic.
+
+Host stop is shown as applied only after a matching acknowledgment. Older Connectors ignore the request safely and retain their existing audio path; the viewer states that only browser playback is muted until host support is confirmed. A website update alone cannot install these native changes. The downloadable app remains the previously approved build until a separate Connector package update is authorized.
+
+Mouse moves retain only the newest unsent position at a 16 ms cadence with a 4 KiB soft queue limit. Keys, pointer buttons and release remain ordered barriers; a 64 KiB hard limit closes the congested control channel rather than retaining unbounded stale input. Resolution, FPS targets and encoder quality policies are unchanged.
+
+Native privacy queries run on one worker: active sampling every 50 ms with results expiring after 100 ms, and idle sampling every 500 ms with a 600 ms expiry. Activation invalidates idle grants and waits for a fresh active result. Slow, failed or stale checks pause media/input without treating unknown state as a confirmed revocation; only a fresh denial ends the attachment. Capture and actual input injection retain live native permission checks, and session/owner/authorization gates remain enforced on each operation. Snapshots never extend a permission or server lease.
+
 ## Permission polling and recovery
 
 The Connector starts status checks every four seconds, including time spent waiting for the prior response. A poll has a six-second timeout; mutations retain their normal timeout and are not automatically retried. Outages back off to at most ten seconds.

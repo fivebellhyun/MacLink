@@ -88,7 +88,7 @@ MacLink's free software price applies to permitted noncommercial use with attrib
 
 Open the [website](https://www.maclink.cloud/) on another computer and sign in to the **same Google account** used to register your Mac. Choose **Connect** on the online Mac under **My devices**, with view-only/control and connection-method options. There is no invitation issuance/input or separate host-email check.
 
-Use the sound button in the viewer to enable or mute system audio. If the browser blocks autoplay, click it to start playback. The Mac needs the updated Connector and **Screen & System Audio Recording** permission. The microphone is not transmitted.
+Use the sound button in the viewer to enable or mute system audio. A supporting Connector also stops host capture, Opus encoding and audio transmission when muted; the viewer confirms this only after the host acknowledges it. Older Connectors mute browser playback only. PCM playback has a separate explicit button. If the browser blocks autoplay, click it to start playback. The Mac needs the updated Connector and **Screen & System Audio Recording** permission. The microphone is not transmitted.
 
 At **Ultra**, compatible browsers play uncompressed **48 kHz stereo, 32-bit float PCM**, using about **3.1 Mbps** in addition to video. Other presets and PCM fallback use music-oriented **192 kbps Opus**. The sound indicator shows the format actually playing. PCM preserves the captured samples without a lossy audio codec; macOS mixing/resampling, playback hardware and network loss can still affect what you hear. It does not copy the source music file bit for bit.
 
