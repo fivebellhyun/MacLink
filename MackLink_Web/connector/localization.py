@@ -7,6 +7,7 @@ LANGUAGE_KEY = 'MacLinkUILanguage'
 LANGUAGES = ('ko', 'en')
 
 ENGLISH = {
+    '최신 공개 버전: v{version}': 'Latest published version: v{version}',
     'Google 계정으로 연결': 'Connect with Google',
     'Google 계정으로 이 Mac을 연결하세요': 'Connect this Mac with Google',
     'Google 로그인으로 이 Mac을 자동 등록합니다.': 'Register this Mac automatically with Google sign-in.',

@@ -296,20 +296,39 @@ class ConnectorPanel:
         self.screen.setAlignment_(A.NSTextAlignmentRight)
         self.input.setAlignment_(A.NSTextAlignmentRight)
 
-        registration = _card(page, ((0, 300), (388, 164)))
-        self.buttons['account'] = [_button(registration, 'Google 계정으로 연결', ((16, 14), (356, 48)), target, 'connectGoogle:', primary=True, symbol='person.crop.circle', rounded=True)]
+        registration = self.registration_card = _card(page, ((0, 300), (388, 164)))
+        self.buttons['account'] = [_button(registration, 'Google 계정으로 연결', ((16, 14), (356, 40)), target, 'connectGoogle:', primary=True, symbol='person.crop.circle', rounded=True)]
         self.registration_home = _label(registration, '브라우저에서 로그인하면 이 Mac이 자동으로 등록됩니다.', ((18, 78), (244, 64)), 12, secondary=True, lines=3)
         self.buttons['cancelEnrollment'] = [_button(registration, '취소', ((274, 82), (98, 40)), target, 'cancelEnrollment:', rounded=True)]
         self.home_start = _button(page, '커넥터 시작', ((0, 480), (188, 48)), target, 'startWorker:', symbol='play.fill', rounded=True)
         self.buttons['stop'] = [_button(page, '연결 중지', ((200, 480), (188, 48)), target, 'stopWorker:', symbol='stop.fill', rounded=True)]
-        notice = _card(page, ((0, 544), (388, 68)))
+        notice = self.home_notice_card = _card(page, ((0, 544), (388, 68)))
         self.notice = _label(notice, '기기 키와 권한은 설정에서 관리할 수 있습니다.', ((18, 15), (352, 40)), 12, secondary=True, lines=2)
+
+    def _layout_home_registration(self, registering):
+        # Wrap the current translation to its visible content instead of
+        # reserving a three-line enrollment area after registration finishes.
+        width = 244 if registering else 352
+        label = self.registration_home
+        text_height = label.cell().cellSizeForBounds_(A.NSMakeRect(0, 0, width, 1000)).height
+        row_height = max(text_height, 40 if registering else 0)
+        label.setFrame_(A.NSMakeRect(18, 70 + (row_height - text_height) / 2, width, text_height))
+        cancel = self.buttons['cancelEnrollment'][0]
+        cancel.setFrameOrigin_((274, 70 + (row_height - 40) / 2))
+        card_height = 70 + row_height + 16
+        self.registration_card.setFrameSize_((388, card_height))
+        controls_top = self.registration_card.frame().origin.y + card_height + 16
+        self.home_start.setFrameOrigin_((0, controls_top))
+        self.buttons['stop'][0].setFrameOrigin_((200, controls_top))
+        notice_top = controls_top + self.home_start.frame().size.height + 16
+        self.home_notice_card.setFrameOrigin_((0, notice_top))
+        self.pages[0].setFrameSize_((388, notice_top + self.home_notice_card.frame().size.height + 16))
 
     def _build_settings(self, page, target):
         setup = _card(page, ((0, 0), (388, 248)))
         _label(setup, '이 Mac 연결하기', ((18, 15), (352, 22)), 15, bold=True)
         _label(setup, 'Google 로그인으로 이 Mac을 자동 등록합니다.', ((18, 42), (352, 20)), 12, secondary=True)
-        self.buttons['account'].append(_button(setup, 'Google 계정으로 연결', ((16, 72), (356, 48)), target, 'connectGoogle:', primary=True, symbol='person.crop.circle', rounded=True))
+        self.buttons['account'].append(_button(setup, 'Google 계정으로 연결', ((16, 72), (356, 40)), target, 'connectGoogle:', primary=True, symbol='person.crop.circle', rounded=True))
         self.registration_settings = _label(setup, '브라우저에서 로그인하면 이 Mac이 자동으로 등록됩니다.', ((18, 132), (244, 52)), 12, secondary=True, lines=3)
         self.buttons['cancelEnrollment'].append(_button(setup, '취소', ((274, 136), (98, 40)), target, 'cancelEnrollment:', rounded=True))
         self.buttons['import'] = [_button(setup, '고급: 기기 키 가져오기…', ((16, 194), (218, 40)), target, 'importKey:', symbol='square.and.arrow.down')]
@@ -370,6 +389,8 @@ class ConnectorPanel:
         status = snapshot.get('status')
         if status == 'available':
             message = tr('새 버전 v{version}이 있습니다.').format(version=snapshot['latest'])
+        elif status == 'current' and snapshot.get('latest') and snapshot['latest'] != self.version:
+            message = tr('최신 공개 버전: v{version}').format(version=snapshot['latest'])
         else:
             message = tr({
                 'idle': '버튼을 눌러 최신 버전을 확인하세요.',
@@ -464,6 +485,7 @@ class ConnectorPanel:
         for label in (self.registration_home, self.registration_settings): label.setStringValue_(message)
         for button in self.buttons['cancelEnrollment']:
             button.setHidden_(not registering); button.setEnabled_(registration['status'] in ('starting', 'pending', 'network'))
+        self._layout_home_registration(registering)
         if snapshot.get('preview'):
             notice = 'UI 미리보기입니다.\n기기 키와 실제 권한 상태는 읽지 않습니다.'
         elif not snapshot.get('configured') and not snapshot.get('online'):
