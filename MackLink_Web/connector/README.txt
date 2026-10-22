@@ -1,4 +1,4 @@
-MacLink Connector 1.4.0 - macOS menu bar app
+MacLink Connector 1.4.1 - macOS menu bar app
 
 Install MacLink.app once on the host Mac. On another computer, sign in to the
 same Google account and choose Connect under My devices to view or control it.

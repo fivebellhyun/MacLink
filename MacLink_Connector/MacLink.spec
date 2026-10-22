@@ -1,12 +1,13 @@
 # Build on macOS with scripts/build-macos-app.sh; no system Python is needed at runtime.
 import os
+import runpy
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 source = Path(SPECPATH)
 project = source.parent
 identity = os.environ.get('MACLINK_CODESIGN_IDENTITY') or None
-version = '1.4.0'
+version = runpy.run_path(str(source / 'app_runtime.py'))['VERSION']
 data = collect_data_files('certifi') + [
     (str(source / 'maclink_icon.png'), '.'),
     (str(project / 'LICENSE.md'), 'legal'),

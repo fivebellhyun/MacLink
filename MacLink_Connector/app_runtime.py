@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-VERSION = '1.4.0'
+VERSION = '1.4.1'
 WEBSITE_URL = 'https://www.maclink.cloud'
 APP_ROOT = Path.home() / 'Library/Application Support/MacLink'
 CONFIG_PATH = APP_ROOT / 'config.json'

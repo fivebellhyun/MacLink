@@ -14,7 +14,7 @@ import urllib.error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'connector'))
 import enrollment as E
-from app_runtime import atomic_json, save_imported_config
+from app_runtime import VERSION, atomic_json, save_imported_config
 
 
 def pending(created=1000):
@@ -240,7 +240,7 @@ class HTTPTests(unittest.TestCase):
             self.assertEqual(E.post('/api/enrollment/start', 'b' * 64, {'name': 'Test'}), {'status': 'pending'})
         self.assertEqual(opener.request.full_url, E.WEBSITE_URL + '/api/enrollment/start')
         self.assertEqual(opener.request.get_header('Authorization'), 'Bearer ' + 'b' * 64)
-        self.assertEqual(opener.request.get_header('User-agent'), 'MacLink/1.4.0')
+        self.assertEqual(opener.request.get_header('User-agent'), 'MacLink/' + VERSION)
         self.assertEqual(opener.timeout, E.TIMEOUT)
         self.assertEqual(response.limit, E.MAX_BYTES + 1)
         self.assertIsNone(E.NoRedirect().redirect_request(opener.request, None, 307, '', {}, 'https://attacker.invalid/'))
