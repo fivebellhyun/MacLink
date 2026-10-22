@@ -1,6 +1,7 @@
 # Original MacLink diagrams
 
-The architecture and setup diagrams reflect Connector 1.4.0.
+The architecture and setup diagrams reflect Connector 1.4.0; that connection
+architecture is unchanged in 1.4.1. The native UI previews below use 1.4.1.
 Three diagrams are provided in English (`-en`) and Korean (`-ko`):
 
 | Name | Content | PNG size |
@@ -22,31 +23,38 @@ images from the reference repository. They use the project license in
 않아도 보이도록 SVG의 글자는 윤곽선으로 변환했습니다. 문구를 바꾸려면
 생성 스크립트를 수정하고 필요한 글꼴과 Inkscape를 설치해 다시 실행하세요.
 
-## Connector registration preview
-
-[connector-registration-ko.png](connector-registration-ko.png) shows the actual
-Connector 1.4.0 Home and Settings view code rendered offscreen in Korean.
-The example confirmation code is synthetic. No device keys, real permission
-states, workers or live account data are read for this documentation preview.
-
-## Earlier Connector screenshot galleries
+## Native Connector UI previews
 
 | Asset | Content | PNG size |
 | --- | --- | --- |
-| [connector-overview-en.png](connector-overview-en.png) | Home and Settings UI previews | 1536 x 1024 |
-| [connector-settings-en.png](connector-settings-en.png) | Connection controls, permissions, and language settings | 1536 x 1024 |
+| [connector-registration-en.png](connector-registration-en.png) | English Google registration and example verification code | 1776 x 1648 |
+| [connector-registration-ko.png](connector-registration-ko.png) | Korean Google registration and example verification code | 1776 x 1648 |
+| [connector-overview-en.png](connector-overview-en.png) | English Home and Settings with example connected/allowed labels | 1776 x 1648 |
+| [connector-settings-en.png](connector-settings-en.png) | English account controls, permissions, language and version check | 1776 x 1648 |
 
-These galleries were composed with the built-in image generation tool from
-English preview captures of the MacLink 1.3.2 application. They illustrate the
-interface; preview mode does not read connection keys or actual permissions.
-The original captures were retained unchanged. The edited galleries are not
-evidence of a live connection or granted permissions.
+English README images use the English interface; the Korean README retains the
+Korean registration image. These replace the earlier 1.3.2 galleries that showed
+manual key import as the primary setup flow.
 
-Source captures: `en-light-640-home.png`, `en-light-640-settings.png`, and
-`en-light-640-settings-bottom.png` under the local
-`.build/connector-spacing-20261017-final-review/previews/` directory.
-The final PNG outputs were copied into this directory without further image
-processing. The corresponding `*.prompt.txt` files record the full prompts.
+The images are rendered directly from the current `ConnectorPanel` AppKit view
+code by [generate_connector_previews.py](generate_connector_previews.py). The
+export uses native vector drawing rasterized at 2x, then composes the panels
+with documentation captions. Scroll content is expanded or presented in
+sections to keep the actual controls readable. It is not an AI-generated
+reconstruction of the interface.
 
-Editing prompts: [Connector overview](connector-overview-en.prompt.txt) and
-[Connector settings](connector-settings-en.prompt.txt).
+Every connection status, permission label, device name and confirmation code
+is synthetic. No app window is opened, no worker starts, and no connection key,
+live permission state, account data or configuration is read. Language is
+overridden only in the export process; the user's preference is not changed.
+The version-check example distinguishes local 1.4.1 from public installer 1.4.0.
+These illustrations do not establish a live connection or granted permissions.
+
+To regenerate on macOS after preparing the Connector build environment:
+
+```sh
+.build/maclink/venv/bin/python docs/images/generate_connector_previews.py
+```
+
+The exporter requires AppKit/PyObjC and Pillow from that environment. It never
+installs, launches or updates `/Applications/MacLink.app`.

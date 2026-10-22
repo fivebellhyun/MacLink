@@ -6,7 +6,9 @@ Access your Mac from anywhere with the same Google account.
 
 Install the Connector and register your Mac to your Google account. Sign in to the same account on another computer and choose **My devices → Connect** to receive its screen and system sound and control the mouse and keyboard. Manage the host from a native macOS menu bar app.
 
-**Connector 1.4.0** · **English** / [한국어](README.ko.md)
+**Connector source 1.4.1** · **English** / [한국어](README.ko.md)
+
+The source and local build are version **1.4.1**. The website's public DMG is still **1.4.0**; the 1.4.1 installer has not been published.
 
 [Website](https://www.maclink.cloud/) · [Download Connector](https://www.maclink.cloud/api/downloads/MacLink-Connector-arm64.dmg) · [Releases](https://github.com/fivebellhyun/MacLink/releases) · [License](LICENSE.md) · [Privacy Policy](https://www.maclink.cloud/privacy) · [Terms of Service](https://www.maclink.cloud/terms)
 
@@ -37,9 +39,20 @@ The downloadable Connector targets **Apple M-series Macs (Apple silicon, arm64)*
 
 Manage the connection from the MacLink icon in the macOS menu bar.
 
-![MacLink 1.4.0 automatic registration preview: Google connection and browser confirmation code.](docs/images/connector-registration-ko.png)
+![MacLink 1.4.1 English automatic registration preview: Connect with Google and enter the confirmation code in your browser.](docs/images/connector-registration-en.png)
 
-*Connector 1.4.0 Korean UI preview of automatic registration. The example code and status do not read live credentials, permissions or connections.*
+*Connector 1.4.1 English UI preview, rendered from the native app code. The example code and statuses are synthetic; no live credentials, permissions or connections are read.*
+
+<details>
+<summary>View connection status and more settings</summary>
+
+![MacLink 1.4.1 English Home and Settings previews with an example connected state and Google account registration.](docs/images/connector-overview-en.png)
+
+![MacLink 1.4.1 English Settings previews: connection controls, macOS permissions, language and version check.](docs/images/connector-settings-en.png)
+
+*The scroll content is expanded or presented in sections for readability. The connected state and permission labels are examples, not a live connection check.*
+
+</details>
 
 | Tab | What you can do |
 | --- | --- |
@@ -152,7 +165,7 @@ The Connector itself currently uses STUN rather than native TURN. Browser-side T
 | Device ownership | Google subject and device ownership are checked. Access requires a live login to the same account. Device/session secrets are stored as hashes. |
 | Login-session binding | Each remote session is bound to the Google login that created it. A session token alone grants no access, and sign-out or expiry revokes it. |
 | Access scope | The server and Connector enforce view-only versus control permissions. Native input also requires macOS Accessibility permission. |
-| Authorization refresh | Connector 1.4.0 normally polls every four seconds. After 17 seconds without fresh authorization, it pauses screen/system-sound transmission and input. The peer can be retained for up to 30 seconds from the last confirmation. |
+| Authorization refresh | The Connector normally polls every four seconds. After 17 seconds without fresh authorization, it pauses screen/system-sound transmission and input. The peer can be retained for up to 30 seconds from the last confirmation. |
 | Revocation and recovery | Explicit revocation, a replaced session/generation, or lost macOS permissions closes the old connection. Resuming requires fresh authorization for the current session. |
 | WebRTC | Video, system sound and input use encrypted WebRTC transport. |
 | Local credentials | The automatically configured device key is stored under `~/Library/Application Support/MacLink`; treat it like a password. Remote text is not written to Connector logs. |
