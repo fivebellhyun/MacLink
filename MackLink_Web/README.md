@@ -1,4 +1,4 @@
-# MacLink website 1.4.0
+# MacLink website 1.4.1
 
 The Korean/English client for `https://www.maclink.cloud` manages registered devices, Google sign-in and account-owned WebRTC remote sessions. It uses React/Sites/Vinext, Cloudflare Workers and D1.
 
