@@ -19,12 +19,12 @@ export function RemoteViewer({session:s,onEnd}:{session:RemoteSession;onEnd:(rea
  const localeRef=useRef(locale);localeRef.current=locale;
  const held=useRef<HTMLCanvasElement>(null),picture=useRef<ScreenFrameBuffer|undefined>(undefined),live=useRef(false),stopVideoFrames=useRef<()=>void>(()=>{}),lastSnapshot=useRef(0),inputBlocked=useRef(false),lastConfirmed=useRef(0);
  const [hasFrame,setHasFrame]=useState(false),[checking,setChecking]=useState(false);
- const audio=useRef<HTMLAudioElement>(null),soundOn=useRef(true),hostAudio=useRef(new HostAudioControl());
+ const audio=useRef<HTMLAudioElement>(null),soundOn=useRef(false),hostAudio=useRef(new HostAudioControl());
  const [hostAudioEnabled,setHostAudioEnabled]=useState<boolean|null>(null);
  const pcm=useRef<PcmAudioPlayer|null>(null),pcmChannel=useRef(s.pcmChannel),lastPcmReady=useRef(0),qualityValue=useRef<VideoQuality>(DEFAULT_VIDEO_QUALITY),appliedValue=useRef<VideoQuality|null>(null);
  const [pcmCapable,setPcmCapable]=useState(false),[pcmAvailable,setPcmAvailable]=useState(false),[pcmPhase,setPcmPhase]=useState('idle'),[pcmNote,setPcmNote]=useState(''),[opusPlaying,setOpusPlaying]=useState(false);
  useEffect(()=>setPcmCapable(supportsPcmAudio()),[]);
- const [soundEnabled,setSoundEnabled]=useState(true),[hasAudio,setHasAudio]=useState(false),[audioBlocked,setAudioBlocked]=useState(false),[audioSupported,setAudioSupported]=useState<boolean|null>(null),[audioError,setAudioError]=useState('');
+ const [soundEnabled,setSoundEnabled]=useState(false),[hasAudio,setHasAudio]=useState(false),[audioBlocked,setAudioBlocked]=useState(false),[audioSupported,setAudioSupported]=useState<boolean|null>(null),[audioError,setAudioError]=useState('');
  const diagnostics=useRef(new ConnectionDiagnostics()),connectorVersion=useRef<string|null>(null);
  function connectionReport(){return buildConnectionReport(diagnostics.current,peer.current,{mode:connectionMode.current,generation:generation.current,connectorVersion:connectorVersion.current,lastStatusAgeMs:lastConfirmed.current?performance.now()-lastConfirmed.current:null,dataChannelState:channel.current?.readyState});}
  function frameBuffer(){if(!picture.current&&held.current)picture.current=new ScreenFrameBuffer(held.current);return picture.current;}

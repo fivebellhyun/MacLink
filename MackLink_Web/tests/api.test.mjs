@@ -117,9 +117,9 @@ test('unchanged quality reports avoid repeated row writes and stale reports cann
  const prepare=h.env.DB.prepare,writes=[];
  h.env.DB.prepare=q=>{const statement=prepare(q),run=statement.run;statement.run=async()=>{const result=await run();if(q.startsWith('UPDATE sessions SET quality_applied='))writes.push(result.meta.changes);return result;};return statement;};
  const report=profile=>h.call('agent/'+d.id+'/poll',{method:'POST',token:d.token,data:{info:{qualityControl:true,quality:{session:s.id,generation:0,profile}}}});
- assert.equal((await report('ultra')).status,200);assert.equal((await report('ultra')).status,200);assert.deepEqual(writes,[1,0]);
+ assert.equal((await report('high')).status,200);assert.equal((await report('high')).status,200);assert.deepEqual(writes,[1,0]);
  h.sqlite.prepare("UPDATE sessions SET quality='low',quality_applied=NULL WHERE id=?").run(s.id);
- assert.equal((await report('ultra')).status,200);assert.equal(h.sqlite.prepare('SELECT quality_applied FROM sessions WHERE id=?').get(s.id).quality_applied,null);
+ assert.equal((await report('high')).status,200);assert.equal(h.sqlite.prepare('SELECT quality_applied FROM sessions WHERE id=?').get(s.id).quality_applied,null);
  assert.equal((await report('low')).status,200);assert.deepEqual(writes,[1,0,0,1]);
 });
 
@@ -209,18 +209,19 @@ test('removing TURN settings invalidates cached issuance without changing sessio
 
 test('quality controls require a capable connector and accept only supported presets for the current session',async()=>{
  const h=harness(),d=await register(h);await online(h,d);const s=await connect(h,d);await active(h,d,s);
- let status=await (await h.call('sessions/'+s.id,{token:s.token})).json();assert.equal(status.quality,'ultra');assert.equal(status.qualitySupported,false);
- const firstPoll=await (await h.call('agent/'+d.id+'/poll',{method:'POST',token:d.token,data:{info:{screen:true,accessibility:true}}})).json();assert.equal(firstPoll.session.quality,'ultra');
+ assert.equal(h.sqlite.prepare('SELECT quality FROM sessions WHERE id=?').get(s.id).quality,'high');
+ let status=await (await h.call('sessions/'+s.id,{token:s.token})).json();assert.equal(status.quality,'high');assert.equal(status.qualitySupported,false);
+ const firstPoll=await (await h.call('agent/'+d.id+'/poll',{method:'POST',token:d.token,data:{info:{screen:true,accessibility:true}}})).json();assert.equal(firstPoll.session.quality,'high');
  assert.equal((await h.call('sessions/'+s.id+'/quality',{method:'POST',token:s.token,data:{quality:'high',generation:0}})).status,409);
  await qualityOnline(h,d);
  assert.equal((await h.call('sessions/'+s.id+'/quality',{method:'POST',data:{quality:'high',generation:0}})).status,401);
  for(const quality of ['invalid',null,{},'__proto__'])assert.equal((await h.call('sessions/'+s.id+'/quality',{method:'POST',token:s.token,data:{quality,generation:0}})).status,400);
  assert.equal((await h.call('sessions/'+s.id+'/quality',{method:'POST',token:s.token,data:{quality:'high',generation:99}})).status,409);
- assert.equal((await h.call('sessions/'+s.id+'/quality',{method:'POST',token:s.token,data:{quality:'high',generation:0}})).status,200);
- status=await (await h.call('sessions/'+s.id,{token:s.token})).json();assert.equal(status.quality,'high');assert.equal(status.qualityApplied,null);assert.equal(status.qualitySupported,true);assert.equal(status.status,'active');
- const p=await (await qualityOnline(h,d)).json();assert.equal(p.session.quality,'high');
- await qualityOnline(h,d,{session:s.id,generation:0,profile:'high'});
- assert.equal((await (await h.call('sessions/'+s.id,{token:s.token})).json()).qualityApplied,'high');
+ assert.equal((await h.call('sessions/'+s.id+'/quality',{method:'POST',token:s.token,data:{quality:'ultra',generation:0}})).status,200);
+ status=await (await h.call('sessions/'+s.id,{token:s.token})).json();assert.equal(status.quality,'ultra');assert.equal(status.qualityApplied,null);assert.equal(status.qualitySupported,true);assert.equal(status.status,'active');
+ const p=await (await qualityOnline(h,d)).json();assert.equal(p.session.quality,'ultra');
+ await qualityOnline(h,d,{session:s.id,generation:0,profile:'ultra'});
+ assert.equal((await (await h.call('sessions/'+s.id,{token:s.token})).json()).qualityApplied,'ultra');
 });
 
 test('view-only guests can choose quality without changing scope or another Mac',async()=>{

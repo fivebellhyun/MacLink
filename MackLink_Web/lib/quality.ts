@@ -5,7 +5,7 @@ export const QUALITY_PROFILES=[
  {id:'ultra',label:'최고',width:2560,height:null,fps:60,targetMbps:16,maxMbps:40},
 ] as const;
 export type VideoQuality=typeof QUALITY_PROFILES[number]['id'];
-export const DEFAULT_VIDEO_QUALITY:VideoQuality='ultra';
+export const DEFAULT_VIDEO_QUALITY:VideoQuality='high';
 export function isVideoQuality(value:unknown):value is VideoQuality{return QUALITY_PROFILES.some(p=>p.id===value);}
 
 export function qualityProfileLabel(profile:typeof QUALITY_PROFILES[number],translate:(message:string)=>string):string{
