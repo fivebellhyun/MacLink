@@ -4,153 +4,138 @@
 
 Access your Mac from anywhere with the same Google account.
 
-Install the Connector and register your Mac to your Google account. Sign in to the same account on another computer and choose **My devices → Connect** to receive its screen and system sound and control the mouse and keyboard. Manage the host from a native macOS menu bar app.
+Install the Connector on your Mac and register it to your Google account. Sign in to the same account on another computer and choose **My devices → Connect** to receive the screen and system sound and control the mouse and keyboard. Manage the host connection from the macOS menu bar app.
 
-**Connector source 1.4.1** · **English** / [한국어](README.ko.md)
-
-The source and local build are version **1.4.1**. The website's public DMG is still **1.4.0**; the 1.4.1 installer has not been published.
+**Connector 1.4.1** · **English** / [한국어](README.ko.md)
 
 [Website](https://www.maclink.cloud/) · [Download Connector](https://www.maclink.cloud/api/downloads/MacLink-Connector-arm64.dmg) · [Releases](https://github.com/fivebellhyun/MacLink/releases) · [License](LICENSE.md) · [Privacy Policy](https://www.maclink.cloud/privacy) · [Terms of Service](https://www.maclink.cloud/terms)
 
-Developed by [fivebellhyun](https://github.com/fivebellhyun). Source is available for review, modification, and noncommercial use with attribution. Hosting and optional TURN services may incur separate costs.
+Developed by [fivebellhyun](https://github.com/fivebellhyun). You may modify and adapt the source for noncommercial use with attribution. Hosting and optional TURN services may incur separate costs.
 
 ## Quick Start
 
-1. Download **MacLink Connector** from the [website](https://www.maclink.cloud/). Open the DMG, drag **MacLink** into **Applications**, and launch it.
-2. In the menu bar app, choose **Connect with Google**. Your browser opens the MacLink registration page.
-3. Sign in with Google, check the Mac name, enter the six-digit code shown in the Connector, and approve registration. The Connector applies its registration automatically; no key-file download or import is needed.
-4. Allow **Screen & System Audio Recording** and **Device control / Accessibility** in macOS System Settings, then restart the Connector if requested. Wait for the Mac to appear online under **My devices**.
+1. Download **MacLink Connector** from the [website](https://www.maclink.cloud/). Open the DMG, move **MacLink** to **Applications**, and launch it.
+2. In the menu bar app, choose **Connect with Google**. The MacLink registration page opens in your browser.
+3. Sign in with Google, check the Mac name, enter the six-digit code shown in the Connector, and approve registration.
+4. Allow **Screen & System Audio Recording** and **Device Control & Data Access** in macOS System Settings. Restart the Connector if prompted, then wait for the Mac to appear online under **My devices**.
 5. On another computer, sign in to the **same Google account** and choose **Connect** on your online Mac.
 
-Restarting or updating a configured Connector reuses its saved registration. A device that has never connected is shown as **Setup in progress**, rather than as an offline configured Mac.
+A configured Connector keeps its existing registration after restarting or updating. A device that has never connected is shown as **Setup in progress**, rather than as an ordinary offline device.
 
-The remote computer only needs a compatible browser. Your Mac must remain **awake, logged in, connected to the internet, and running the Connector**.
+The remote computer only needs a compatible browser. The host Mac must be **awake and running the Connector**.
 
-The downloadable Connector targets **Apple M-series Macs (Apple silicon, arm64)** running **macOS 13 or later**. Python is bundled in the app; end users do not need Python, a source ZIP, or a Terminal session.
+The downloadable Connector currently targets **Apple M-series Macs (Apple silicon, arm64)** running **macOS 13 or later**.
 
 <details>
 <summary>View the setup guide</summary>
 
-![MacLink setup: DMG installation, browser approval from the Connector, permissions, and same-account access from My devices on another computer.](docs/images/setup-flow-en.png)
+![MacLink setup: DMG installation, browser registration approval started from the Connector, permissions, and same-account access from My devices on another computer.](docs/images/setup-flow-en.png)
 
 </details>
 
-## Desktop App (Menu Bar)
+## Menu Bar App
 
 Manage the connection from the MacLink icon in the macOS menu bar.
 
-![MacLink 1.4.1 English automatic registration preview: Connect with Google and enter the confirmation code in your browser.](docs/images/connector-registration-en.png)
+![MacLink 1.4.1 automatic registration preview: Google account connection and browser verification code.](docs/images/connector-registration-en.png)
 
-*Connector 1.4.1 English UI preview, rendered from the native app code. The example code and statuses are synthetic; no live credentials, permissions or connections are read.*
-
-<details>
-<summary>View connection status and more settings</summary>
-
-![MacLink 1.4.1 English Home and Settings previews with an example connected state and Google account registration.](docs/images/connector-overview-en.png)
-
-![MacLink 1.4.1 English Settings previews: connection controls, macOS permissions, language and version check.](docs/images/connector-settings-en.png)
-
-*The scroll content is expanded or presented in sections for readability. The connected state and permission labels are examples, not a live connection check.*
-
-</details>
+*English UI preview of Connector 1.4.1 automatic registration. The code and statuses are examples; no live account, permission or connection data is read.*
 
 | Tab | What you can do |
 | --- | --- |
-| Home | Check server connection, session status, Screen Recording, and Device control; reconnect or stop the Connector. |
-| Settings | Connect with Google, open logs, start or restart the Connector, enable launch at login, open macOS permission settings, and choose Korean or English. Manual key import remains available for recovery. |
+| Home | Check server connection, session status, Screen Recording and Device control permissions; reconnect or stop the Connector. |
+| Settings | Connect with Google, open logs, start or restart the Connector, enable launch at login, open macOS permission settings, and select a language. Manual key import remains available for development. |
 
-**Device control** in MacLink corresponds to the macOS **Accessibility** permission. Screen Recording may appear as **Screen & System Audio Recording** on some macOS versions; the Connector uses this permission for screen and system sound. It does not capture the microphone.
+**Device control** in MacLink corresponds to the macOS **Device Control & Data Access** permission. Depending on the macOS version, Screen Recording appears as **Screen & System Audio Recording**.
 
+To update, quit MacLink, replace the installed app with the app from the latest DMG, and launch it again. Device settings are stored in `~/Library/Application Support/MacLink`. After replacing the build, grant macOS permissions again.
 
-To update, quit MacLink, replace the installed app with the newer DMG version, and reopen it. Device configuration is stored in `~/Library/Application Support/MacLink`. macOS may require you to grant permissions again after replacing a build.
-
-Release builds currently use ad-hoc signatures and are not Developer ID signed or notarized. If macOS blocks a downloaded build, review its origin and use the normal **Privacy & Security** approval flow.
+The current release uses an ad-hoc signature and has no Developer ID signature or notarization. If macOS blocks a downloaded app, verify its source and use the standard approval process under **Privacy & Security**.
 
 ## Features
 
 | Feature | Description |
 | --- | --- |
-| Browser access | View your Mac's primary display and send mouse and keyboard input without installing a remote client. |
-| Menu bar Connector | Manage connection, permissions, logs, and login startup from a native macOS app. |
-| Account-based access | Only browsers signed in to the Google account that registered the Mac can connect. |
-| System sound | Send Mac system audio over WebRTC without capturing the microphone. |
+| Browser access | View the Mac's primary display and send mouse and keyboard input without installing a viewer app. |
+| Menu bar Connector | Manage connections, permissions, logs and launch at login from the macOS app. |
+| Account-owned access | Registered Macs are accessible only from a browser signed in to the same Google account. |
+| System sound | Send the Mac's system audio over WebRTC. The microphone is not captured. |
 | View-only mode | Share the screen without granting mouse or keyboard control. |
-| WebRTC streaming | Use a direct connection or an optional TURN relay. |
+| WebRTC streaming | Connect directly or use an optional TURN relay. |
 | Windows keyboard mapping | Map Windows Ctrl shortcuts to Mac Command or configure modifier keys individually. |
-| Quality controls | Choose capture width, target frame rate, and WebRTC encoder bitrate together, up to a 2560-pixel width and 60 fps target. |
+| Quality presets | Select capture width, target frame rate and WebRTC encoder bitrate together. Ultra targets a maximum width of 2560 px at 60 fps. |
 
-## vs. Paid Alternatives
+## Comparison with Paid Services
 
-A comparison with selected single-user paid plans, using the Korean README's KRW price examples. Regional prices, promotions and taxes can change; check the [TeamViewer pricing](https://www.teamviewer.com/ko/pricing/overview/) and [AnyDesk pricing](https://anydesk.com/ko/pricing) pages before purchasing.
+This table compares selected single-user paid plans. The amounts below are the South Korean won (KRW) examples listed in the Korean document. Prices vary by region, discounts and taxes; check the official [TeamViewer pricing](https://www.teamviewer.com/ko/pricing/overview/) and [AnyDesk pricing](https://anydesk.com/ko/pricing) before purchasing.
 
 | | MacLink | TeamViewer Remote Access | AnyDesk Solo |
 | --- | --- | --- | --- |
 | Software price | **Free for permitted noncommercial use** | **KRW 16,900/month** | **KRW 43,000/month** |
 | Annual payment | Free for permitted noncommercial use | KRW 202,800/year | KRW 520,000/year |
-| Billing | Free | Annually; tax excluded | Annually; VAT excluded |
+| Billing | Free | Annual billing, taxes excluded | Annual billing, VAT excluded |
 | Licensed users | No per-user software fee | 1 | 1 |
-| Concurrent connections | 1 remote user per Mac | 1 channel; up to 3 session tabs | 1; Solo cannot add concurrent connections |
-| Unattended host devices | Up to 8 Macs per owner account | 3 | 100 |
-| Source and customization | Available under the [project license](LICENSE.md) | See vendor license terms | See vendor license terms |
+| Concurrent connections | One remote user per Mac | 1 channel, up to 3 session tabs | 1 connection; Solo does not support adding concurrent connections |
+| Unattended devices | Register up to 8 Macs per owner account | 3 | 100 |
+| Source and modification | Source available under the [project license](LICENSE.md) | See the provider's license terms | See the provider's license terms |
 
-MacLink's free software price applies to permitted noncommercial use with attribution; commercial use requires separate written permission. Website hosting, storage, and optional TURN traffic may cost extra. MacLink currently provides one primary display and one remote user per Mac, with system audio but without dedicated file transfer. See the [license](LICENSE.md), [device and session implementation](MackLink_Web/lib/server.ts), and [Limitations](#limitations).
+MacLink is free for permitted noncommercial use with attribution; commercial use requires separate written permission. Website hosting, storage and optional TURN traffic may incur additional costs. MacLink currently supports one primary display and one remote user per Mac, plus system audio. Dedicated file transfer is not provided. See the [license](LICENSE.md), [device/session implementation](MackLink_Web/lib/server.ts) and [limitations](#limitations).
 
 ## Usage
 
-### Connect to Your Devices
+### Connect to My Devices with the Same Account
 
-Open the [website](https://www.maclink.cloud/) on another computer and sign in to the **same Google account** used to register your Mac. Choose **Connect** on the online Mac under **My devices**, with view-only/control and connection-method options. There is no invitation issuance/input or separate host-email check.
+Open the [website](https://www.maclink.cloud/) on another computer and sign in to the **same Google account** used to register the Mac. Under **My devices**, choose **Connect** on an online Mac. You can select view-only or control access and the connection method. There are no invitation links to issue or enter, and no separate host-email check.
 
-Use the sound button in the viewer to enable or mute system audio. A supporting Connector also stops host capture, Opus encoding and audio transmission when muted; the viewer confirms this only after the host acknowledges it. Older Connectors mute browser playback only. PCM playback has a separate explicit button. If the browser blocks autoplay, click it to start playback. The Mac needs the updated Connector and **Screen & System Audio Recording** permission. The microphone is not transmitted.
+Use the sound button in the remote viewer to enable or mute system audio. If the browser blocks autoplay, click the sound button to start playback. The Mac needs **Screen & System Audio Recording** permission and the updated Connector; the microphone is not transmitted. On a supporting Connector, muting also stops host capture, Opus encoding and audio transmission. The website displays this only after the host acknowledges it. Older Connectors mute browser playback only. PCM playback starts with a separate button.
 
-At **Ultra**, compatible browsers play uncompressed **48 kHz stereo, 32-bit float PCM**, using about **3.1 Mbps** in addition to video. Other presets and PCM fallback use music-oriented **192 kbps Opus**. The sound indicator shows the format actually playing. PCM preserves the captured samples without a lossy audio codec; macOS mixing/resampling, playback hardware and network loss can still affect what you hear. It does not copy the source music file bit for bit.
+With **Ultra**, a supporting browser plays **48 kHz stereo, 32-bit floating-point PCM** without compression, using approximately **3.1 Mbps** in addition to video. Other presets and PCM fallback use music-oriented **192 kbps Opus**. The sound indicator shows the format actually playing. PCM avoids applying a lossy codec to the captured samples. macOS mixing and resampling, playback devices and network loss still affect what you hear; this does not copy the original music file bit for bit.
 
-**Disconnect** ends the current connection. **Sign out** or login expiry also ends connections bound to that login. Removing a device invalidates its Connector key and deletes related sessions.
+**Disconnect** ends the current connection. **Sign out** or login expiry also ends remote connections bound to that login. Removing a device invalidates its Connector key and deletes related sessions.
 
-### Keyboard, Quality, and Fullscreen
+### Keyboard, Quality and Fullscreen
 
-Open **Settings** in the remote viewer to configure keyboard mapping and capture quality.
+Open **Settings** in the remote viewer to adjust keyboard mapping and capture quality.
 
 | Setting | Behavior |
 | --- | --- |
-| Swap Ctrl and Command | Send Windows Ctrl+C, Ctrl+V, and Ctrl+Z as Mac Command shortcuts. |
-| Individual modifiers | Remap or disable Ctrl, Windows/Command, Alt/Option, and Shift. |
-| Fast / Medium / Sharp / Ultra | Select capture and WebRTC encoder targets; actual quality depends on hardware, network, and transport. |
-| Fullscreen | Show the remote display; press Escape to return to the toolbar. |
+| Swap Ctrl and Command | Send Windows Ctrl+C, Ctrl+V and Ctrl+Z as Mac Command shortcuts. |
+| Individual modifiers | Remap or disable Ctrl, Windows/Command, Alt/Option and Shift individually. |
+| Fast / Balanced / Sharp / Ultra | Select capture and WebRTC encoder targets. Actual quality depends on hardware, network conditions and the connection path. |
+| Fullscreen | Display the remote screen in fullscreen. Press Escape to return to the toolbar. |
 
-Shortcuts reserved by the local operating system or browser may be intercepted before MacLink receives them. Refreshing the same browser tab can recover a session using that tab's session storage; another browser or computer signs in to the same account and connects again under My devices.
+The local operating system or browser may handle reserved shortcuts before MacLink receives them. Refreshing the same browser tab can restore the connection using that tab's session storage. On another browser or computer, sign in to the same account and start a new connection from My devices.
 
 | Preset | Maximum capture width | Target frame rate | WebRTC encoder target / ceiling |
 | --- | --- | --- | --- |
 | Fast | 1600 px | 15 fps | 2 / 4 Mbps |
-| Medium | 1600 px | 24 fps | 4 / 8 Mbps |
+| Balanced | 1600 px | 24 fps | 4 / 8 Mbps |
 | Sharp | 2560 px | 30 fps | 8 / 16 Mbps |
 | Ultra | 2560 px | 60 fps | 16 / 40 Mbps |
 
-Capture preserves the source aspect ratio and never upscales a smaller display. **Ultra targets a maximum capture width of 2560 pixels at 60 fps; it does not guarantee a sustained 60 fps, lossless video, or a constant 40 Mbps.** Codec alignment may round odd dimensions down. The encoder target and ceiling are settings, not measured throughput: WebRTC congestion feedback can lower the bitrate, and the browser, negotiated codec, host performance, and network can limit the result. See the [capture profiles](MacLink_Connector/quality.py).
+Capture preserves the source aspect ratio. **Ultra targets a maximum capture width of 2560 px at 60 fps; it does not guarantee sustained 60 fps, lossless video or a constant 40 Mbps.** Codec alignment may round odd dimensions down to even dimensions. The encoder target and ceiling are settings, not measured throughput. WebRTC congestion control may lower the bitrate, and the browser, negotiated codec, Mac performance and network also affect the result. See the [capture profiles](MacLink_Connector/quality.py).
 
-
-### Keep Your Mac Available
+### Keep Remote Access Available
 
 Enable **Start MacLink at login** in Connector Settings. This starts the app after macOS login; it does not unlock FileVault or provide access before login.
 
-The running Connector uses `caffeinate -di` to prevent automatic idle sleep. Closing the lid or manually putting the Mac to sleep can still interrupt access. For unattended use, keep the Mac awake with its lid open and power connected.
+The running Connector uses `caffeinate -di` to prevent automatic idle sleep. Closing the lid or manually putting the Mac to sleep may interrupt the connection. For unattended access, keep the Mac awake with its lid open and power connected.
 
 ## Connection Paths
 
-The Connector makes outbound HTTPS requests for registration status, authorization, and WebRTC signaling. It captures the Mac display and processes authorized input through native macOS APIs. No inbound HTTP port or manual port forwarding is required on the Mac.
+The Connector makes outbound HTTPS requests for registration status, authorization checks and WebRTC signaling. It captures the Mac display and processes authorized input through native macOS APIs.
 
-| Connection | Screen and input path | Trade-off |
+| Connection | Screen/input path | Notes |
 | --- | --- | --- |
-| Direct WebRTC | Encrypted video and data channel between the browser and Mac. | Preferred when the networks permit a connection. |
-| WebRTC with TURN | An optional TURN service relays encrypted WebRTC packets. | Helps on restricted networks and may incur relay costs. |
+| Direct WebRTC | Encrypted video and data channels between the browser and Mac | Preferred when the network permits a connection. |
+| WebRTC with TURN | An optional TURN service relays encrypted WebRTC packets | Helps on restricted networks and may incur relay costs. |
 
-The website uses React/Sites/Vinext, Cloudflare Workers, and D1. An owner can configure a Cloudflare TURN account in **Connection Settings**. Automatic mode tries the available WebRTC paths, then a browser-side TURN/TLS 443 attempt when configured, and reports failure if neither path is available.
+The website uses React/Sites/Vinext, Cloudflare Workers and D1. Owners can configure their own Cloudflare TURN account under **Connection settings**. Automatic mode tries available WebRTC paths and, when TURN is configured, makes one additional browser-side TURN/TLS 443 attempt. If both paths are blocked, it reports connection failure.
 
-The Connector itself currently uses STUN rather than native TURN. Browser-side TURN does not guarantee connectivity if the Mac's network also blocks outbound UDP. TLS 443 can also be blocked by HTTP-only proxies or managed network policies.
+The Connector itself currently uses STUN rather than native TURN. Browser-side TURN cannot guarantee connectivity if the Mac's network also blocks outbound UDP. HTTP-only proxies or managed network policies may also block TLS 443.
 
 <details>
-<summary>View the connection architecture</summary>
+<summary>View the connection diagrams</summary>
 
 ![MacLink architecture: HTTPS sign-in and signaling, with encrypted screen, system sound and input over direct WebRTC or optional TURN.](docs/images/architecture-en.png)
 
@@ -160,22 +145,21 @@ The Connector itself currently uses STUN rather than native TURN. Browser-side T
 
 ## Security and Data Handling
 
-| Area | Current behavior |
+| Item | Current behavior |
 | --- | --- |
-| Device ownership | Google subject and device ownership are checked. Access requires a live login to the same account. Device/session secrets are stored as hashes. |
-| Login-session binding | Each remote session is bound to the Google login that created it. A session token alone grants no access, and sign-out or expiry revokes it. |
-| Access scope | The server and Connector enforce view-only versus control permissions. Native input also requires macOS Accessibility permission. |
-| Authorization refresh | The Connector normally polls every four seconds. After 17 seconds without fresh authorization, it pauses screen/system-sound transmission and input. The peer can be retained for up to 30 seconds from the last confirmation. |
-| Revocation and recovery | Explicit revocation, a replaced session/generation, or lost macOS permissions closes the old connection. Resuming requires fresh authorization for the current session. |
+| Device ownership | Google subject identifiers and device ownership are checked. Access requires a valid login session for the same account. Device and session secrets are stored as hashes. |
+| Login-session binding | Remote sessions are bound to the Google login that initiated them. A session token alone does not grant access; signing out or login expiry ends authorization. |
+| Access scope | The server and Connector enforce view-only and control permissions. Native input also requires macOS Accessibility permission. |
+| Authorization refresh | Connector 1.4.1 normally polls every four seconds. After 17 seconds without fresh authorization, it pauses screen/system-sound transmission and input. The existing peer can be retained for up to 30 seconds from the last confirmation. |
+| Revocation and recovery | Explicit revocation, session or transport generation changes, and loss of macOS permissions close the previous connection. Resuming requires fresh authorization for the current session. |
 | WebRTC | Video, system sound and input use encrypted WebRTC transport. |
-| Local credentials | The automatically configured device key is stored under `~/Library/Application Support/MacLink`; treat it like a password. Remote text is not written to Connector logs. |
+| Local credentials | The automatically configured device key is stored under `~/Library/Application Support/MacLink`; protect it like a password. Remote input text is not written to Connector logs. |
 
-Google sign-in does not automatically link a previous account by matching email addresses. To bring a legacy device into your current Google account, choose **My Devices → Import device with an existing key**, select its connection-key JSON, and confirm. The device’s previous sessions end; connect again from My devices. A key cannot import a device owned by a different Google account. Previous account TURN settings are not copied; configure TURN again in **Connection Settings**.
+Google sign-in does not link an older account merely because its email address matches. To bring a device from an older account into your current Google account, choose **My devices → Import device with existing connection key**, select the key JSON and confirm. Previous remote sessions end, so reconnect from My devices. Devices registered to another Google account cannot be imported. The older account's TURN settings are not copied; configure them again under **Connection settings**.
 
+Keep your Google account, device key, session tokens and TURN secrets secure. A public link or email address alone cannot grant device access. Choose view-only when control is unnecessary, then disconnect or sign out after use.
 
-Protect your Google account, device keys, session tokens and TURN secrets. Public links or email addresses alone grant no access. Choose view-only when control is unnecessary, and disconnect or sign out when finished.
-
-Owner sign-in uses Google OpenID Connect with `state`, `nonce`, and PKCE. The server issues an opaque `HttpOnly` session cookie; Google `sub` identifies the owner. Sign-out uses a same-origin `POST /auth/signout` with an `Origin` check. When deploying your own server, configure the server-only `TURN_CONFIG_KEY` as a secure random 64-character hexadecimal value and keep it stable so saved TURN credentials remain decryptable.
+When deploying your own server, retain trusted owner authentication and set the server-only `TURN_CONFIG_KEY` to a cryptographically secure random 64-character hexadecimal value. Keep the same key across deployments so stored TURN credentials remain decryptable. Do not blindly trust owner-authentication headers sent directly by public clients.
 
 ## Development
 
@@ -186,28 +170,28 @@ cd MacLink
 
 ### Build the macOS App
 
-Build on macOS with Python **3.11–3.14**. The chosen Python distribution and native dependencies must support macOS 13; the build checks the deployment targets of bundled Mach-O binaries.
+Build on macOS with Python **3.11–3.14**. The selected Python distribution and native dependencies must support macOS 13. The build checks the minimum supported macOS version of Mach-O binaries bundled in the app.
 
 ```bash
 bash scripts/build-macos-app.sh
 
-# Optionally select a compatible Python installation.
+# Specify a compatible Python installation if needed.
 MACLINK_BUILD_PYTHON=/path/to/python3 bash scripts/build-macos-app.sh
 ```
 
-The script bundles Python and dependencies with PyInstaller, runs the app self-test, verifies the code signature, and creates `dist/MacLink.app`, an architecture-specific DMG, and its SHA-256 file. It does not publish a release. `--install` additionally copies the app to `~/Applications` if no copy exists there; it does not launch the app or enable login startup.
+The script bundles Python and dependencies with PyInstaller, runs the app self-test and code-signature verification, then creates `dist/MacLink.app`, an architecture-specific DMG and a SHA-256 file. It does not publish a release. Adding `--install` copies the app to `~/Applications` if no existing app is present; it does not launch the app or enable launch at login.
 
-After a maintainer publishes matching DMG and checksum assets to GitHub Releases, the repository's installer can download and verify them:
+After a maintainer publishes the DMG and checksum file to GitHub Releases, you can download and verify them with the repository's install script.
 
 ```bash
 bash scripts/install-maclink.sh
 ```
 
-Quit an existing Connector before installing or updating. The installer defaults to `~/Applications` and preserves the device key. Developer source launchers in `MacLink_Connector/` remain available; stop old Terminal/LaunchAgent instances before starting the menu bar app.
+Quit the running Connector before installing or updating. The install script defaults to `~/Applications` and preserves the device key. Developer source launchers in `MacLink_Connector/` are also available; stop existing Terminal or LaunchAgent instances before starting the menu bar app.
 
 ### Run the Website Locally
 
-Use **Node.js 22.13 or later** and **pnpm 11.25.0**. Supply deployment-specific `.openai/hosting.json` configuration in `MackLink_Web/`; its storage names must match the server's `DB` binding. This configuration is not tracked in Git.
+Use **Node.js 22.13 or later** and **pnpm 11.25.0**. Supply deployment-specific `.openai/hosting.json` settings in `MackLink_Web/`; the storage name must match the server's `DB` binding. This configuration file is not tracked in Git.
 
 ```bash
 cd MackLink_Web
@@ -215,16 +199,16 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Local development uses Cloudflare emulation. Owner sign-in uses the Google OIDC flow and server-managed session; local emulation does not authenticate an owner by itself. Production requires Google OAuth configuration, storage, secrets, and hosting configuration. Adapting the source to AWS or another runtime also requires configuring those integrations.
+Local development uses Cloudflare emulation; actual sign-in requires Google OAuth configuration. See [Google login setup](docs/GOOGLE_LOGIN_SETUP.ko.md). Production requires real owner authentication, storage, secrets and hosting configuration. Moving to another runtime, such as AWS, also requires replacing these integrations.
 
 ```bash
-# From MackLink_Web/, after installing dependencies and configuring hosting.
+# Run in MackLink_Web/ after preparing dependencies and hosting settings.
 node --experimental-strip-types --experimental-sqlite --test tests/*.test.mjs
 pnpm exec tsc --noEmit
 pnpm build
 ```
 
-After building the Connector, run its regression tests from the repository root:
+After building the Connector, run its regression tests from the repository root.
 
 ```bash
 .build/maclink/venv/bin/python -m unittest discover -s MackLink_Web/tests -p 'test_*.py'
@@ -234,46 +218,46 @@ After building the Connector, run its regression tests from the repository root:
 
 | Path | Contents |
 | --- | --- |
-| `MacLink_Connector/` | Native menu bar app, worker, capture, input, localization, and local configuration. |
-| `MackLink_Web/app/`, `MackLink_Web/components/` | Device management, access flow, remote viewer, and settings. |
-| `MackLink_Web/lib/` | Authorization, signaling, browser transport, keyboard mapping, and TURN. |
-| `MackLink_Web/db/`, `MackLink_Web/drizzle/` | Database schema and additive migrations. |
-| `MackLink_Web/connector/` | Distribution copy of the native Connector source. |
-| `scripts/` | Build, installer, and source synchronization. |
-| `MackLink_Web/tests/` | Web/API and native Connector tests. |
+| `MacLink_Connector/` | Native menu bar app, worker, screen capture, input, translations and local settings |
+| `MackLink_Web/app/`, `MackLink_Web/components/` | Device management, connection flow, remote viewer and settings |
+| `MackLink_Web/lib/` | Authorization, signaling, browser transport, keyboard mapping and TURN |
+| `MackLink_Web/db/`, `MackLink_Web/drizzle/` | Database schema and cumulative migrations |
+| `MackLink_Web/connector/` | Distribution copy of the native Connector source |
+| `scripts/` | Build, installation and source synchronization |
+| `MackLink_Web/tests/` | Web/API and native Connector tests |
 
-After changing Connector source, synchronize the distribution copies with `python3 scripts/sync-connector.py`; add `--check` to verify without writing. Add a new migration for schema changes instead of modifying one already applied. Additional implementation details are in [Developer Notes](docs/DEVELOPER_NOTES.md).
+After changing Connector source, synchronize the distribution copies with `python3 scripts/sync-connector.py`. Add `--check` to verify without writing files. For schema changes, add a new migration rather than modifying one already applied. See [Developer Notes](docs/DEVELOPER_NOTES.md) for implementation details.
 
 ## Troubleshooting
 
 | Symptom | What to check |
 | --- | --- |
-| Mac is waiting for setup or stays offline | Finish browser approval from **Connect with Google** in the Connector. For an existing registration, check the Connector status and log; starting it does not attach a different newly created device. |
-| Another Connector is running | Stop the older Terminal or login-service instance before starting the menu bar app. |
-| Permission still says required | Check the installed MacLink app in macOS Privacy & Security, then quit and reopen it. An older app entry may need to be removed and the current copy added again. |
-| Screen works but input does not | Confirm control access and MacLink's Accessibility permission. Check keyboard input separately from mouse clicks. |
-| Device missing or access denied | Sign in again to the Google account that registered the Mac and check that its Connector is online. |
-| Connection repeatedly recovers | Check that the website and Connector are compatible, inspect the Connector log, and copy the viewer's connection diagnostics. |
-| Access fails after reboot | Unlock FileVault and log in on the Mac; check login startup, power, network, and permissions. |
+| Setup in progress or persistently offline | Complete browser approval through **Connect with Google** in the Connector. For an existing registration, check the Connector status and log. |
+| Another Connector is running | Stop the Connector running in an existing Terminal or login service before starting the menu bar app. |
+| Permissions still required after approval | Check the installed MacLink app under macOS Privacy & Security, then quit and reopen it. You may need to remove the old app entry and add the current app again. |
+| Screen works but input does not | Check control authorization and MacLink's Device Control & Data Access permission. Test mouse clicks and keyboard input separately. |
+| Device missing or access denied | Check that you are using the Google account that registered the Mac, sign in again, and confirm that the Connector is online. |
+| Connection repeatedly recovers | Check website/Connector compatibility, inspect the Connector log, and copy the remote viewer's connection diagnostics. |
+| Cannot connect after reboot | Unlock FileVault and sign in on the Mac. Check launch at login, power, network and permissions. |
 
 ## Limitations
 
-MacLink currently supports one primary display and one remote user per Mac. Dedicated file transfer, multi-monitor switching, Wake-on-LAN, and pre-login/FileVault control are not implemented. Access to a locked Mac is not guaranteed. A sleeping or logged-out Mac cannot be reached through the Connector, and no commercial support SLA is provided.
+MacLink currently supports one primary display and one remote user per Mac. Dedicated file transfer, multi-monitor switching, Wake-on-LAN and pre-login/FileVault control are not implemented.
 
 ## Contributing
 
-Help improve MacLink through code, design, translation, documentation, or reproducible bug reports.
+Help build MacLink with code, design, translation, documentation improvements and reproducible bug reports.
 
-Remove device keys, session tokens, and private screen content before sharing logs or screenshots. Report security issues privately to the maintainer rather than posting working credentials or exploit details in a public issue.
+Before sharing logs or screenshots, remove device keys, session tokens and private screen content. Report security issues privately to the maintainer; do not post valid credentials or attack instructions in public issues.
 
 ## Community
 
 - [Issues](https://github.com/fivebellhyun/MacLink/issues): bug reports and feature requests.
-- [Pull requests](https://github.com/fivebellhyun/MacLink/pulls): code, design, translation, and documentation improvements.
-- [GitHub repository](https://github.com/fivebellhyun/MacLink): browse the source or star the project.
+- [Pull requests](https://github.com/fivebellhyun/MacLink/pulls): code, design, translation and documentation improvements.
+- [GitHub repository](https://github.com/fivebellhyun/MacLink): browse the source and star the project.
 
 ## License
 
-MacLink uses the **MacLink NonCommercial Attribution License 1.0** (`LicenseRef-MacLink-NC-Attribution-1.0`). Noncommercial use, modification, and redistribution are permitted with attribution to **fivebellhyun**. Commercial use requires separate written permission. Publishing your modifications is not required.
+MacLink uses the **MacLink NonCommercial Attribution License 1.0** (`LicenseRef-MacLink-NC-Attribution-1.0`). Noncommercial use, modification and redistribution are allowed with attribution to **fivebellhyun**. Commercial use requires separate written permission. You do not have to publish modified source.
 
 This is source-available software with a noncommercial restriction. Third-party components retain their own licenses and notices. See [LICENSE.md](LICENSE.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the governing terms.

@@ -1,6 +1,6 @@
 # MacLink 1.4.1 developer notes
 
-Connector source/local build: **1.4.1**. Published website installer: **1.4.0** until a separate installer deployment. Native bundle versions read `app_runtime.VERSION`; do not relabel an older public DMG when changing source versions.
+Connector source/local build and published website installer: **1.4.1**. Native bundle versions read `app_runtime.VERSION`; do not relabel an older public DMG when changing source versions.
 
 Update checks run only when requested. If GitHub has no stable public release, the Connector reads the fixed repository installer manifest and verifies its size and SHA-256 ETag against a HEAD request to the fixed website DMG URL. Unpublished source metadata cannot become an available update by itself. The check does not download or install the DMG, and a local version newer than the public installer displays the actual published version.
 

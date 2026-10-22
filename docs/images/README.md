@@ -47,7 +47,8 @@ Every connection status, permission label, device name and confirmation code
 is synthetic. No app window is opened, no worker starts, and no connection key,
 live permission state, account data or configuration is read. Language is
 overridden only in the export process; the user's preference is not changed.
-The version-check example distinguishes local 1.4.1 from public installer 1.4.0.
+The version-check example uses the current public installer manifest and shows
+Connector 1.4.1 as up to date.
 These illustrations do not establish a live connection or granted permissions.
 
 To regenerate on macOS after preparing the Connector build environment:
