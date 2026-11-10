@@ -11,11 +11,10 @@ MacLink의 원본 프로젝트 코드·문서·자산에는 [MacLink 비상업�
 
 | Material | Copyright / origin | License and retained notice |
 | --- | --- | --- |
-| `build/sites-vite-plugin.ts` | OpenAI; vendored `@openai/sites-vite-plugin` 0.2.0 | MIT; [original notice](build/sites-vite-plugin.LICENSE) |
 | `vendor/shadcn-tailwind-4.13.0.css` | shadcn | MIT; [original notice](vendor/shadcn-tailwind-4.13.0.LICENSE.md) |
 
-Both notice files are retained unchanged. Retain them when redistributing the
-corresponding materials. The custom MacLink license does not revoke their
+The notice file is retained unchanged. Retain it when redistributing the
+corresponding material. The custom MacLink license does not revoke its
 separately granted permissions.
 
 ## Installed dependencies

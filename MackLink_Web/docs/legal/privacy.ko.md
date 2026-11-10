@@ -67,11 +67,9 @@ WebRTC 직접 연결에서는 화면과 입력을 암호화된 통신으로 호�
 | 제공자·역할 | 처리 범위·문의 |
 | --- | --- |
 | Google LLC — Google 인증 기능 이용 시 | 계정 인증과 기본 프로필 확인. 문의·삭제 권리는 Google 개인정보처리방침과 계정 관리에서도 행사할 수 있습니다. |
-| OpenAI — Sites 호스팅 | 웹사이트 제공, 요청 처리·보안. MacLink가 화면·입력을 AI 모델에 보내는 기능을 제공한다는 뜻은 아닙니다. 문의: OpenAI Privacy Portal. |
-| Cloudflare, Inc. — 호스팅 기반·저장소·네트워크 보안·STUN/TURN | 서비스 요청, 데이터 저장·전송 및 선택적 중계. 중계 계정을 직접 등록하면 해당 제공자 계약도 적용됩니다. 문의: privacyquestions@cloudflare.com. |
+| Cloudflare, Inc. — 웹사이트 호스팅·저장소·네트워크 보안·STUN/TURN | 웹사이트 제공, 서비스 요청 처리·보안, 데이터 저장·전송 및 선택적 중계. 중계 계정을 직접 등록하면 해당 제공자 계약도 적용됩니다. 문의: privacyquestions@cloudflare.com. |
 
 - [Google 개인정보처리방침](https://policies.google.com/privacy)
-- [OpenAI 개인정보처리방침·문의](https://openai.com/policies/row-privacy-policy/)
 - [Cloudflare 개인정보처리방침](https://www.cloudflare.com/privacypolicy/)
 
 ## 8. 국외 처리

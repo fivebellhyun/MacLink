@@ -130,7 +130,7 @@ The Connector makes outbound HTTPS requests for registration status, authorizati
 | Direct WebRTC | Encrypted video and data channels between the browser and Mac | Preferred when the network permits a connection. |
 | WebRTC with TURN | An optional TURN service relays encrypted WebRTC packets | Helps on restricted networks and may incur relay costs. |
 
-The website uses React/Sites/Vinext, Cloudflare Workers and D1. Owners can configure their own Cloudflare TURN account under **Connection settings**. Automatic mode tries available WebRTC paths and, when TURN is configured, makes one additional browser-side TURN/TLS 443 attempt. If both paths are blocked, it reports connection failure.
+The website is built with React/Vinext and deployed to the operator's own Cloudflare account on Workers and D1 ([deployment guide, Korean](MackLink_Web/docs/DEPLOYMENT.ko.md)). Owners can configure their own Cloudflare TURN account under **Connection settings**. Automatic mode tries available WebRTC paths and, when TURN is configured, makes one additional browser-side TURN/TLS 443 attempt. If both paths are blocked, it reports connection failure.
 
 The Connector itself currently uses STUN rather than native TURN. Browser-side TURN cannot guarantee connectivity if the Mac's network also blocks outbound UDP. HTTP-only proxies or managed network policies may also block TLS 443.
 
@@ -189,23 +189,26 @@ bash scripts/install-maclink.sh
 
 Quit the running Connector before installing or updating. The install script defaults to `~/Applications` and preserves the device key. Developer source launchers in `MacLink_Connector/` are also available; stop existing Terminal or LaunchAgent instances before starting the menu bar app.
 
-### Run the Website Locally
+### Run and Deploy the Website
 
-Use **Node.js 22.13 or later** and **pnpm 11.25.0**. Supply deployment-specific `.openai/hosting.json` settings in `MackLink_Web/`; the storage name must match the server's `DB` binding. This configuration file is not tracked in Git.
+Use **Node.js 22.13 or later** and **pnpm 11.25.0**. Worker and D1 settings live in `MackLink_Web/wrangler.jsonc`. Keep secrets in `.dev.vars` locally and in `wrangler secret` in production; never commit them.
 
 ```bash
 cd MackLink_Web
 pnpm install --frozen-lockfile
-pnpm dev
+cp .dev.vars.example .dev.vars   # fill in local values
+pnpm db:migrate:local
+pnpm dev                          # http://localhost:5173
 ```
 
-Local development uses Cloudflare emulation; actual sign-in requires Google OAuth configuration. See [Google login setup](docs/GOOGLE_LOGIN_SETUP.ko.md). Production requires real owner authentication, storage, secrets and hosting configuration. Moving to another runtime, such as AWS, also requires replacing these integrations.
+Local development runs the Cloudflare runtime (workerd) with a local D1 database; actual sign-in requires Google OAuth configuration. See [Google login setup](MackLink_Web/docs/GOOGLE_LOGIN_SETUP.ko.md). The [deployment guide](MackLink_Web/docs/DEPLOYMENT.ko.md) covers creating the D1 database, registering secrets, connecting `www.maclink.cloud` and importing existing data. Moving outside Cloudflare, such as to AWS or Firebase, requires replacing the D1 and static-asset bindings and the `cloudflare:workers` integration.
 
 ```bash
-# Run in MackLink_Web/ after preparing dependencies and hosting settings.
-node --experimental-strip-types --experimental-sqlite --test tests/*.test.mjs
-pnpm exec tsc --noEmit
+# Run in MackLink_Web/.
+pnpm test
+pnpm typecheck
 pnpm build
+pnpm run deploy   # complete steps 1-4 of the deployment guide before the first deploy
 ```
 
 After building the Connector, run its regression tests from the repository root.

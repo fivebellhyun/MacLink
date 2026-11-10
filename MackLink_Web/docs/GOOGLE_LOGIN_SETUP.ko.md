@@ -31,23 +31,21 @@ Google Auth Platform의 앱 브랜드 정보에 다음 주소를 등록합니다
 
 운영자는 오종현, 공개 문의처는 taoss3932@gmail.com입니다. 두 정책은 로그인 없이 열 수 있으며, 페이지 상단에서 한국어·영어를 선택할 수 있습니다.
 
-## Sites 운영 환경 변수
+## Cloudflare Workers 환경 변수와 비밀 값
 
-다음 값은 소스나 README가 아니라 Sites의 서버 환경 변수로 등록합니다.
+다음 값은 소스나 README가 아니라 Cloudflare Worker `maclink`에 등록합니다. 전체 배포 절차는 [배포 안내](DEPLOYMENT.ko.md)를 참고하세요.
 
 | 이름 | 값 | 보관 방식 |
 | --- | --- | --- |
-| `GOOGLE_CLIENT_ID` | Google에서 발급한 웹 클라이언트 ID | 서버 환경 변수 |
-| `GOOGLE_CLIENT_SECRET` | 같은 클라이언트의 Client Secret | 비밀 값 |
-| `AUTH_BASE_URL` | `https://www.maclink.cloud` | 서버 환경 변수 |
+| `GOOGLE_CLIENT_ID` | Google에서 발급한 웹 클라이언트 ID | `pnpm exec wrangler secret put GOOGLE_CLIENT_ID` |
+| `GOOGLE_CLIENT_SECRET` | 같은 클라이언트의 Client Secret | `pnpm exec wrangler secret put GOOGLE_CLIENT_SECRET` |
+| `AUTH_BASE_URL` | `https://www.maclink.cloud` | `wrangler.jsonc`의 `vars` |
 
-기존 `TURN_CONFIG_KEY`는 유지합니다. 로그인용 키로 재사용하지 않습니다. 환경 변수 등록 후, Google 로그인 코드와 DB 마이그레이션 `0005_google_auth`가 포함된 버전을 배포해야 적용됩니다.
+`TURN_CONFIG_KEY`도 `wrangler secret`으로 등록하며, 기존 데이터를 이전하는 경우 이전 값을 그대로 유지합니다. 로그인용 키로 재사용하지 않습니다. 로컬 개발에서는 같은 이름을 `MackLink_Web/.dev.vars`에 넣고, Google 클라이언트의 승인된 리디렉션 URI에 `http://localhost:5173/auth/google/callback`을 추가합니다.
 
 ## 도메인 확인
 
-`https://www.maclink.cloud/`이 실제 MacLink 페이지를 표시하고 Sites 도메인 상태가 활성화되어야 합니다. HTTPS 인증서 발급만으로 사이트 연결이 끝난 것은 아닙니다.
-
-2026-10-17 최종 확인 시 DNS의 CNAME·소유권 TXT가 설정되었으며, Sites 도메인과 HTTPS 인증서 모두 `active`로 확인되었습니다.
+`https://www.maclink.cloud/`이 실제 MacLink 페이지를 표시하고, Cloudflare 대시보드의 **Workers & Pages → maclink → Settings → Domains & Routes**에서 `www.maclink.cloud` Custom Domain이 활성 상태여야 합니다. HTTPS 인증서 발급만으로 사이트 연결이 끝난 것은 아닙니다. ChatGPT Sites용으로 만들었던 `www` CNAME과 소유권 TXT 레코드는 Custom Domain을 연결하기 전에 삭제합니다.
 
 로그인을 시작한 주소와 콜백 주소는 모두 위의 `www` 주소를 사용합니다. 다른 호스트나 HTTP 주소로 오가면 로그인 쿠키가 연결되지 않으므로 인증을 완료할 수 없습니다.
 

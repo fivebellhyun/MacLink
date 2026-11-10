@@ -1,0 +1,80 @@
+# Deploys MackLink_Web to Cloudflare Workers + D1. Runs only when started by
+# hand (Actions → Deploy website → Run workflow), so every production deploy
+# is an explicit decision. Requires the CLOUDFLARE_API_TOKEN repository secret.
+name: Deploy website
+
+on:
+  workflow_dispatch:
+    inputs:
+      auth_base_url:
+        description: "AUTH_BASE_URL override, e.g. https://maclink.maclink.workers.dev before the custom domain is connected. Leave empty to use wrangler.jsonc."
+        required: false
+        default: ""
+      run_migrations:
+        description: "Apply pending D1 migrations before deploying"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-website
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: MackLink_Web
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: MackLink_Web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: MackLink_Web/pnpm-lock.yaml
+
+      - name: Check Cloudflare token
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Add the CLOUDFLARE_API_TOKEN repository secret (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: |
+          pnpm test
+          pnpm typecheck
+
+      - name: Apply D1 migrations
+        if: ${{ inputs.run_migrations }}
+        run: pnpm db:migrate:remote
+
+      - name: Build and deploy
+        env:
+          AUTH_BASE_URL_OVERRIDE: ${{ inputs.auth_base_url }}
+        run: |
+          pnpm build
+          args=(--message "GitHub Actions ${GITHUB_SHA::7}")
+          if [ -n "$AUTH_BASE_URL_OVERRIDE" ]; then
+            if [[ ! "$AUTH_BASE_URL_OVERRIDE" =~ ^https://[a-z0-9.-]+$ ]]; then
+              echo "::error::auth_base_url must be an origin such as https://www.maclink.cloud"
+              exit 1
+            fi
+            args+=(--var "AUTH_BASE_URL:$AUTH_BASE_URL_OVERRIDE")
+          fi
+          pnpm exec wrangler deploy "${args[@]}"
