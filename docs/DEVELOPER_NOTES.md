@@ -89,14 +89,16 @@ Policies in this source describe the new WebRTC-only build. Do not publish those
 
 ## Build and verification
 
-Use Node.js 22.13+ and pnpm 11.25.0 for the website, with deployment-specific `.openai/hosting.json` containing the existing project ID and `d1: DB`. Google configuration is server-only.
+Use Node.js 22.13+ and pnpm 11.25.0 for the website. The site deploys with Wrangler to the operator's Cloudflare account: `MackLink_Web/wrangler.jsonc` defines the `maclink` Worker (`worker/index.ts`), the D1 binding `DB` with `drizzle/` as its migrations directory, the static-asset binding `ASSETS` and `AUTH_BASE_URL`. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `TURN_CONFIG_KEY` are Worker secrets (`.dev.vars` locally). Google configuration is server-only. See the [deployment guide](DEPLOYMENT.ko.md) for first-time setup, custom domains and importing an existing D1 dump.
 
 ```bash
 cd MackLink_Web
 pnpm install --frozen-lockfile
-node --experimental-strip-types --experimental-sqlite --test tests/*.test.mjs
-pnpm exec tsc --noEmit
+pnpm test
+pnpm typecheck
 pnpm build
+pnpm db:migrate:remote   # apply pending migrations before deploying a schema change
+pnpm run deploy
 ```
 
 Build the Connector on macOS with a macOS 13-compatible Python 3.11–3.14. The app includes Python. The default build performs a non-connecting executable self-test; use `--no-self-test` when no invocation of the built executable is allowed. Static Mach-O and signature checks still run.

@@ -136,7 +136,7 @@ MacLink의 무료 사용은 출처를 표시하는 허용된 비상업적 용도
 | 직접 WebRTC            | 브라우저와 Mac 사이의 암호화된 영상과 데이터 채널     | 네트워크에서 연결이 가능하면 우선 사용합니다.                    |
 | TURN을 사용하는 WebRTC | 선택 사항인 TURN 서비스가 암호화된 WebRTC 패킷을 중계 | 제한된 네트워크에서 도움이 되며, 중계 비용이 발생할 수 있습니다. |
 
-웹사이트는 React/Sites/Vinext, Cloudflare Workers와 D1을 사용합니다. 소유자는 **연결 설정**에서 본인의 Cloudflare TURN 계정을 설정할 수 있습니다. 자동 모드는 사용 가능한 WebRTC 경로를 시도하고, TURN이 설정되어 있으면 브라우저에서 TURN/TLS 443 연결을 한 번 더 시도합니다. 두 경로가 모두 차단되면 연결 실패를 안내합니다.
+웹사이트는 React/Vinext로 만들고 운영자의 Cloudflare 계정에 Workers와 D1로 배포합니다([배포 안내](MackLink_Web/docs/DEPLOYMENT.ko.md)). 소유자는 **연결 설정**에서 본인의 Cloudflare TURN 계정을 설정할 수 있습니다. 자동 모드는 사용 가능한 WebRTC 경로를 시도하고, TURN이 설정되어 있으면 브라우저에서 TURN/TLS 443 연결을 한 번 더 시도합니다. 두 경로가 모두 차단되면 연결 실패를 안내합니다.
 
 현재 커넥터 자체는 네이티브 TURN 대신 STUN을 사용합니다. Mac의 네트워크에서도 아웃바운드 UDP를 차단하면 브라우저 측 TURN만으로 연결을 보장할 수 없습니다. HTTP 전용 프록시나 관리형 네트워크 정책이 TLS 443을 차단할 수도 있습니다.
 
@@ -196,23 +196,26 @@ bash scripts/install-maclink.sh
 
 설치하거나 업데이트하기 전에 실행 중인 커넥터를 종료하세요. 설치 스크립트의 기본 대상은 `~/Applications`이며 기기 키는 유지합니다. `MacLink_Connector/`의 개발자용 소스 실행기도 사용할 수 있습니다. 메뉴 막대 앱을 시작하기 전에는 기존 Terminal·LaunchAgent 실행을 중지하세요.
 
-### 웹사이트 로컬 실행
+### 웹사이트 로컬 실행과 배포
 
-**Node.js 22.13 이상**과 **pnpm 11.25.0**을 사용합니다. `MackLink_Web/`에 배포 환경에 맞는 `.openai/hosting.json` 설정을 제공해야 하며, 저장소 이름은 서버의 `DB` 바인딩과 일치해야 합니다. 이 설정 파일은 Git으로 관리하지 않습니다.
+**Node.js 22.13 이상**과 **pnpm 11.25.0**을 사용합니다. Worker·D1 배포 설정은 `MackLink_Web/wrangler.jsonc`에 있습니다. 비밀 값은 로컬에서는 `.dev.vars`, 운영에서는 `wrangler secret`으로 관리하며 Git에 커밋하지 않습니다.
 
 ```bash
 cd MackLink_Web
 pnpm install --frozen-lockfile
-pnpm dev
+cp .dev.vars.example .dev.vars   # 로컬 값을 채웁니다.
+pnpm db:migrate:local
+pnpm dev                          # http://localhost:5173
 ```
 
-로컬 개발은 Cloudflare 에뮬레이션을 사용하며, 실제 로그인에는 Google OAuth 설정이 필요합니다. [Google 로그인 설정](docs/GOOGLE_LOGIN_SETUP.ko.md)을 참고하세요. 운영 환경에는 실제 소유자 인증, 저장소, 비밀값, 호스팅 설정이 필요합니다. AWS 등 다른 실행 환경으로 옮길 때도 이러한 연동을 교체해야 합니다.
+로컬 개발은 Cloudflare 런타임(workerd)과 로컬 D1을 사용하며, 실제 로그인에는 Google OAuth 설정이 필요합니다. [Google 로그인 설정](MackLink_Web/docs/GOOGLE_LOGIN_SETUP.ko.md)을 참고하세요. Cloudflare 계정에 D1을 만들고, 비밀 값을 등록하고, `www.maclink.cloud`를 연결하는 절차와 기존 데이터 이전 방법은 [배포 안내](MackLink_Web/docs/DEPLOYMENT.ko.md)에 있습니다. AWS·Firebase 등 Cloudflare 밖으로 옮기려면 D1·정적 자산 바인딩과 `cloudflare:workers` 연동을 교체해야 합니다.
 
 ```bash
-# 의존성과 호스팅 설정을 준비한 뒤 MackLink_Web/에서 실행합니다.
-node --experimental-strip-types --experimental-sqlite --test tests/*.test.mjs
-pnpm exec tsc --noEmit
+# MackLink_Web/에서 실행합니다.
+pnpm test
+pnpm typecheck
 pnpm build
+pnpm run deploy   # 최초 배포 전에는 배포 안내의 1~4단계를 먼저 진행합니다.
 ```
 
 커넥터를 빌드한 뒤 저장소 루트에서 회귀 테스트를 실행합니다.
