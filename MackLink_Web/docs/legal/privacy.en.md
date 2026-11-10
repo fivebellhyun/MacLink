@@ -1,6 +1,6 @@
 # Privacy Policy
 
-MacLink · 2026-10-17 · 오종현 · taoss3932@gmail.com
+MacLink · 2026-11-10 · 오종현 · taoss3932@gmail.com
 
 How MacLink processes information and carries screen and remote input.
 
