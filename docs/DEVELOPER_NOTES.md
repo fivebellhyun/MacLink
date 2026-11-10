@@ -89,7 +89,7 @@ Policies in this source describe the new WebRTC-only build. Do not publish those
 
 ## Build and verification
 
-Use Node.js 22.13+ and pnpm 11.25.0 for the website. The site deploys with Wrangler to the operator's Cloudflare account: `MackLink_Web/wrangler.jsonc` defines the `maclink` Worker (`worker/index.ts`), the D1 binding `DB` with `drizzle/` as its migrations directory, the static-asset binding `ASSETS` and `AUTH_BASE_URL`. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `TURN_CONFIG_KEY` are Worker secrets (`.dev.vars` locally). Google configuration is server-only. See the [deployment guide](DEPLOYMENT.ko.md) for first-time setup, custom domains and importing an existing D1 dump.
+Use Node.js 22.13+ and pnpm 11.25.0 for the website. The site deploys with Wrangler to the operator's Cloudflare account: `MackLink_Web/wrangler.jsonc` defines the `maclink` Worker (`worker/index.ts`), the D1 binding `DB` with `drizzle/` as its migrations directory, the static-asset binding `ASSETS` and `AUTH_BASE_URL`. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `TURN_CONFIG_KEY` are Worker secrets (`.dev.vars` locally). Google configuration is server-only. See the [deployment guide](DEPLOYMENT.ko.md) for first-time setup, custom domains and importing an existing D1 dump. Production deploys can also run from the manual GitHub Actions workflow **Deploy website** (`.github/workflows/deploy-website.yml`), which needs the `CLOUDFLARE_API_TOKEN` repository secret.
 
 ```bash
 cd MackLink_Web

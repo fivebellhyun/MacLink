@@ -3,6 +3,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "maclink",
+  // Cloudflare account that owns the Worker and D1 database (not a secret).
+  "account_id": "edde57902bd57230c2ea9fc307b79ebb",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],

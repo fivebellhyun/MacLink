@@ -29,7 +29,7 @@ pnpm exec wrangler login
 pnpm exec wrangler whoami
 ```
 
-CI처럼 브라우저를 열 수 없는 환경에서는 `wrangler login` 대신 `CLOUDFLARE_API_TOKEN`과 `CLOUDFLARE_ACCOUNT_ID` 환경 변수를 사용합니다. 토큰은 **Edit Cloudflare Workers** 템플릿에 D1 편집 권한을 더해 만듭니다. 토큰을 저장소에 커밋하지 마세요.
+CI처럼 브라우저를 열 수 없는 환경에서는 `wrangler login` 대신 `CLOUDFLARE_API_TOKEN` 환경 변수를 사용합니다. 계정 ID는 `wrangler.jsonc`의 `account_id`에 들어 있습니다. 토큰은 **My Profile → API Tokens → Create Token**에서 **Edit Cloudflare Workers** 템플릿에 **Account → D1 → Edit** 권한을 더해 만듭니다. 커스텀 도메인까지 다루려면 `maclink.cloud` 영역의 **Zone → DNS → Edit**도 추가합니다. Global API Key는 사용하지 않으며, 토큰을 저장소에 커밋하지 마세요.
 
 ## 2. D1 데이터베이스 만들기
 
@@ -81,7 +81,7 @@ pnpm exec wrangler secret put TURN_CONFIG_KEY
 
 `TURN_CONFIG_KEY`는 소유자가 등록한 TURN 키를 DB에 암호화해 저장할 때 사용합니다. 기존 데이터를 이전한다면 Sites에서 쓰던 값과 **같은 값**을 넣어야 저장된 TURN 설정을 복호화할 수 있습니다. 새로 시작한다면 `openssl rand -hex 32`로 만듭니다. 값을 잃어버리면 소유자가 **연결 설정**에서 TURN 키를 다시 등록해야 하며, 그동안에는 직접 WebRTC 연결만 사용합니다.
 
-Worker가 아직 없으면 `wrangler secret put`이 같은 이름의 Worker를 먼저 만들지 묻습니다. 승인해도 되고, 5단계 배포 후에 등록해도 됩니다.
+Worker가 아직 없으면 `wrangler secret put`이 같은 이름의 Worker를 먼저 만들지 묻습니다. 승인해도 되고, 5단계 배포 후에 등록해도 됩니다. 대시보드의 **Workers & Pages → maclink → Settings → Variables and Secrets → Add**에서 형식을 **Secret**으로 골라 등록할 수도 있습니다. 비밀 값은 이후 배포에서도 유지됩니다.
 
 ## 5. 배포
 
@@ -89,16 +89,26 @@ Worker가 아직 없으면 `wrangler secret put`이 같은 이름의 Worker를 �
 pnpm run deploy
 ```
 
-`pnpm run deploy`는 `vite build` 후 `wrangler deploy`를 실행합니다. `pnpm deploy`는 pnpm 자체 명령이므로 반드시 `run`을 붙입니다. 배포가 끝나면 `https://maclink.<계정-서브도메인>.workers.dev` 주소가 출력됩니다.
+`pnpm run deploy`는 `vite build` 후 `wrangler deploy`를 실행합니다. `pnpm deploy`는 pnpm 자체 명령이므로 반드시 `run`을 붙입니다. 계정의 workers.dev 서브도메인은 `maclink`이므로 Worker 주소는 `https://maclink.maclink.workers.dev`입니다.
 
-`AUTH_BASE_URL`과 다른 주소에서는 Google 로그인과 기기 등록이 동작하지 않습니다. 도메인을 옮기기 전에 `workers.dev` 주소에서 로그인까지 시험하려면 Google OAuth 클라이언트에 `https://maclink.<계정-서브도메인>.workers.dev/auth/google/callback`을 추가하고, 다음처럼 해당 주소로 한 번 배포합니다.
+`AUTH_BASE_URL`과 다른 주소에서는 Google 로그인과 기기 등록이 동작하지 않습니다. 도메인을 옮기기 전에 `workers.dev` 주소에서 로그인까지 시험하려면 Google OAuth 클라이언트에 `https://maclink.maclink.workers.dev/auth/google/callback`을 추가하고, 다음처럼 해당 주소로 한 번 배포합니다.
 
 ```bash
 pnpm build
-pnpm exec wrangler deploy --var AUTH_BASE_URL:https://maclink.<계정-서브도메인>.workers.dev
+pnpm exec wrangler deploy --var AUTH_BASE_URL:https://maclink.maclink.workers.dev
 ```
 
 이후 `pnpm run deploy`를 다시 실행하면 `wrangler.jsonc`의 운영 주소로 돌아갑니다.
+
+### GitHub Actions로 배포
+
+`.github/workflows/deploy-website.yml`은 사람이 직접 실행할 때만 테스트, 타입 검사, D1 마이그레이션, 빌드, 배포를 차례로 진행합니다. 로컬에 Node.js나 wrangler를 설치하지 않아도 됩니다.
+
+1. GitHub 저장소의 **Settings → Secrets and variables → Actions → New repository secret**에서 `CLOUDFLARE_API_TOKEN`을 등록합니다. 권한은 1단계의 토큰과 같습니다.
+2. **Actions → Deploy website → Run workflow**에서 배포할 브랜치를 고르고 실행합니다. 워크플로 파일이 기본 브랜치(`main`)에 있어야 이 메뉴에 나타납니다.
+3. 커스텀 도메인을 연결하기 전에는 `auth_base_url`에 `https://maclink.maclink.workers.dev`를 넣어 workers.dev에서 로그인을 시험할 수 있습니다. 비워 두면 `wrangler.jsonc`의 `https://www.maclink.cloud`를 사용합니다.
+
+워크플로는 Worker 비밀 값을 바꾸지 않습니다. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TURN_CONFIG_KEY`는 4단계처럼 Cloudflare에 한 번 등록하면 유지됩니다.
 
 ## 6. www.maclink.cloud 연결
 
