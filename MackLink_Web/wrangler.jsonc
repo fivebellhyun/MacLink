@@ -18,9 +18,9 @@
     {
       "binding": "DB",
       "database_name": "maclink",
-      // Paste the ID printed by `pnpm exec wrangler d1 create maclink`.
-      // Local development does not need it.
-      // "database_id": "00000000-0000-0000-0000-000000000000",
+      // Production D1 (APAC). A separate deployment replaces this with the ID
+      // printed by `pnpm exec wrangler d1 create maclink`.
+      "database_id": "cf4a5365-b177-4b0e-922a-3a5f24938a3b",
       "migrations_dir": "drizzle"
     }
   ],

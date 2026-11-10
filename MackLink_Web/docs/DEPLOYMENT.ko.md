@@ -33,11 +33,15 @@ CI처럼 브라우저를 열 수 없는 환경에서는 `wrangler login` 대신 
 
 ## 2. D1 데이터베이스 만들기
 
+운영 D1 `maclink`(APAC)은 이미 만들어져 있고, 그 ID가 `wrangler.jsonc`에 들어 있습니다. 같은 Cloudflare 계정에 배포한다면 이 단계를 건너뜁니다.
+
+다른 계정에 별도 사이트를 배포할 때만 새 DB를 만듭니다.
+
 ```bash
 pnpm exec wrangler d1 create maclink --location apac
 ```
 
-출력된 `database_id`를 `wrangler.jsonc`의 `d1_databases` 항목에 넣고 주석을 해제합니다.
+출력된 `database_id`로 `wrangler.jsonc`의 `d1_databases` 항목을 바꿉니다.
 
 ```jsonc
 "d1_databases": [
