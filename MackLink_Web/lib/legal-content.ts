@@ -4,8 +4,11 @@ export type LegalKind='privacy'|'terms';
 export type LegalLanguage='ko'|'en';
 export const LEGAL_OPERATOR='오종현';
 export const LEGAL_EMAIL='taoss3932@gmail.com';
-export const LEGAL_EFFECTIVE_DATE='2026-10-17';
-export const LEGAL_UPDATED_DATE='2026-10-20';
+// Each policy keeps its own dates so revising one does not re-date the other.
+export const LEGAL_DATES:Record<LegalKind,{effective:string;updated:string}>={
+  privacy:{effective:'2026-11-10',updated:'2026-11-10'},
+  terms:{effective:'2026-10-17',updated:'2026-10-20'},
+};
 export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>={
   "privacy": {
     "ko": {

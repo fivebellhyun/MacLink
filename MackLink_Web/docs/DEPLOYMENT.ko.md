@@ -114,7 +114,7 @@ pnpm exec wrangler deploy --var AUTH_BASE_URL:https://maclink.maclink.workers.de
 
 1. `maclink.cloud`가 아직 Cloudflare에 없다면 대시보드의 **Add a domain**으로 추가하고, 도메인 등록 기관에서 네임서버를 Cloudflare가 안내한 값으로 바꿉니다.
 2. DNS에서 Sites 연결용 `www` CNAME 레코드와 Sites 소유권 TXT 레코드를 삭제합니다. 같은 이름의 레코드가 남아 있으면 Custom Domain을 만들 수 없습니다.
-3. `wrangler.jsonc`의 `routes` 주석을 해제하고 다시 배포합니다.
+3. `wrangler.jsonc`의 `routes`에 Custom Domain이 설정되어 있으므로 다시 배포하면 연결됩니다. 배포 토큰에는 `maclink.cloud` 영역의 **Zone → DNS → Edit**와 **Zone → Workers Routes → Edit** 권한이 필요합니다.
 
    ```jsonc
    "routes": [{ "pattern": "www.maclink.cloud", "custom_domain": true }]
@@ -124,7 +124,7 @@ pnpm exec wrangler deploy --var AUTH_BASE_URL:https://maclink.maclink.workers.de
    pnpm run deploy
    ```
 
-   Custom Domain은 DNS 레코드와 HTTPS 인증서를 자동으로 만듭니다. 대시보드의 **Workers & Pages → maclink → Settings → Domains & Routes**에서도 추가할 수 있습니다.
+   Custom Domain은 DNS 레코드와 HTTPS 인증서를 자동으로 만듭니다. 대시보드의 **Workers & Pages → maclink → Settings → Domains & Routes**에서도 추가할 수 있습니다. 다른 계정에 별도 사이트를 배포한다면 `routes`를 자신의 도메인으로 바꾸거나 지웁니다.
 4. 루트 도메인 `maclink.cloud` 접속을 `www`로 보내려면 Cloudflare **Redirect Rules**로 `https://www.maclink.cloud`에 301 리디렉션을 만듭니다(선택).
 
 Google OAuth 리디렉션 URI(`https://www.maclink.cloud/auth/google/callback`)와 커넥터에 내장된 사이트 주소(`MacLink_Connector/app_runtime.py`의 `WEBSITE_URL`)는 바뀌지 않으므로 수정할 필요가 없습니다. 도메인 자체를 바꾸면 OAuth 설정, `AUTH_BASE_URL`, 커넥터의 `WEBSITE_URL`·업데이트 주소를 함께 바꾸고 커넥터를 다시 빌드해야 합니다.

@@ -27,9 +27,9 @@
     }
   ],
 
-  // Serve the production hostname from this Worker once the maclink.cloud
-  // zone is in the same Cloudflare account (docs/DEPLOYMENT.ko.md, step 6).
-  // "routes": [{ "pattern": "www.maclink.cloud", "custom_domain": true }],
+  // Production hostname. Requires the maclink.cloud zone in this account and a
+  // token with Zone DNS/Workers Routes edit access (docs/DEPLOYMENT.ko.md, step 6).
+  "routes": [{ "pattern": "www.maclink.cloud", "custom_domain": true }],
 
   // Non-secret settings. Store GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and
   // TURN_CONFIG_KEY with `pnpm exec wrangler secret put <NAME>`; never commit

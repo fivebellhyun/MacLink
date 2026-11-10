@@ -1,6 +1,6 @@
 # 개인정보 처리방침
 
-MacLink · 2026-10-17 · 오종현 · taoss3932@gmail.com
+MacLink · 2026-11-10 · 오종현 · taoss3932@gmail.com
 
 MacLink가 어떤 정보를 처리하고, 화면과 입력을 어떻게 전달하는지 안내합니다.
 
