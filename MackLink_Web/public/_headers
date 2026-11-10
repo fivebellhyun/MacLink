@@ -1,0 +1,7 @@
+# Cloudflare Workers static assets bypass the Worker, so apply the same
+# hardening that worker/index.ts adds to dynamic responses.
+/*
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff

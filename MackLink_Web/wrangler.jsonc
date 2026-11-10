@@ -1,0 +1,38 @@
+// MacLink website on Cloudflare Workers + D1.
+// First-time setup and deployment steps: docs/DEPLOYMENT.ko.md
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "maclink",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Static files from public/ and the client build. The Worker reads the
+  // connector installer parts through this binding (app/api/downloads).
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "none"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "maclink",
+      // Paste the ID printed by `pnpm exec wrangler d1 create maclink`.
+      // Local development does not need it.
+      // "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "drizzle"
+    }
+  ],
+
+  // Serve the production hostname from this Worker once the maclink.cloud
+  // zone is in the same Cloudflare account (docs/DEPLOYMENT.ko.md, step 6).
+  // "routes": [{ "pattern": "www.maclink.cloud", "custom_domain": true }],
+
+  // Non-secret settings. Store GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and
+  // TURN_CONFIG_KEY with `pnpm exec wrangler secret put <NAME>`; never commit
+  // them. Local overrides belong in .dev.vars (see .dev.vars.example).
+  "vars": {
+    "AUTH_BASE_URL": "https://www.maclink.cloud"
+  }
+}

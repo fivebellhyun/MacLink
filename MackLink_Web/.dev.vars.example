@@ -1,0 +1,7 @@
+# Copy to .dev.vars for `pnpm dev` / `pnpm preview`. .dev.vars is ignored by Git.
+# Production values are stored with `pnpm exec wrangler secret put <NAME>`.
+AUTH_BASE_URL=http://localhost:5173
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=replace-with-your-google-client-secret
+# 64 lowercase hex characters, e.g. `openssl rand -hex 32`
+TURN_CONFIG_KEY=
