@@ -159,12 +159,8 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
                 "계정 인증과 기본 프로필 확인. 문의·삭제 권리는 Google 개인정보처리방침과 계정 관리에서도 행사할 수 있습니다."
               ],
               [
-                "OpenAI — Sites 호스팅",
-                "웹사이트 제공, 요청 처리·보안. MacLink가 화면·입력을 AI 모델에 보내는 기능을 제공한다는 뜻은 아닙니다. 문의: OpenAI Privacy Portal."
-              ],
-              [
-                "Cloudflare, Inc. — 호스팅 기반·저장소·네트워크 보안·STUN/TURN",
-                "서비스 요청, 데이터 저장·전송 및 선택적 중계. 중계 계정을 직접 등록하면 해당 제공자 계약도 적용됩니다. 문의: privacyquestions@cloudflare.com."
+                "Cloudflare, Inc. — 웹사이트 호스팅·저장소·네트워크 보안·STUN/TURN",
+                "웹사이트 제공, 서비스 요청 처리·보안, 데이터 저장·전송 및 선택적 중계. 중계 계정을 직접 등록하면 해당 제공자 계약도 적용됩니다. 문의: privacyquestions@cloudflare.com."
               ]
             ]
           },
@@ -172,10 +168,6 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
             {
               "label": "Google 개인정보처리방침",
               "href": "https://policies.google.com/privacy"
-            },
-            {
-              "label": "OpenAI 개인정보처리방침·문의",
-              "href": "https://openai.com/policies/row-privacy-policy/"
             },
             {
               "label": "Cloudflare 개인정보처리방침",
@@ -394,12 +386,8 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
                 "Authentication and basic identity. Google’s privacy policy and account controls also apply."
               ],
               [
-                "OpenAI — Sites hosting",
-                "Website delivery, request processing and security. MacLink does not provide a feature that sends screen/input contents to an AI model. Contact: OpenAI Privacy Portal."
-              ],
-              [
-                "Cloudflare, Inc. — hosting infrastructure, storage, security and STUN/TURN",
-                "Requests, storage/transport and optional relay services. User-managed relay accounts also follow the provider agreement. Contact: privacyquestions@cloudflare.com."
+                "Cloudflare, Inc. — website hosting, storage, security and STUN/TURN",
+                "Website delivery, request processing and security, storage/transport and optional relay services. User-managed relay accounts also follow the provider agreement. Contact: privacyquestions@cloudflare.com."
               ]
             ]
           },
@@ -407,10 +395,6 @@ export const legalDocuments:Record<LegalKind,Record<LegalLanguage,LegalContent>>
             {
               "label": "Google Privacy Policy",
               "href": "https://policies.google.com/privacy"
-            },
-            {
-              "label": "OpenAI Privacy Policy and contact",
-              "href": "https://openai.com/policies/row-privacy-policy/"
             },
             {
               "label": "Cloudflare Privacy Policy",

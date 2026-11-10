@@ -67,11 +67,9 @@ MacLink does not sell personal data or provide it to advertisers. Disclosure is 
 | Provider and role | Processing and contact |
 | --- | --- |
 | Google LLC — when Google sign-in is used | Authentication and basic identity. Google’s privacy policy and account controls also apply. |
-| OpenAI — Sites hosting | Website delivery, request processing and security. MacLink does not provide a feature that sends screen/input contents to an AI model. Contact: OpenAI Privacy Portal. |
-| Cloudflare, Inc. — hosting infrastructure, storage, security and STUN/TURN | Requests, storage/transport and optional relay services. User-managed relay accounts also follow the provider agreement. Contact: privacyquestions@cloudflare.com. |
+| Cloudflare, Inc. — website hosting, storage, security and STUN/TURN | Website delivery, request processing and security, storage/transport and optional relay services. User-managed relay accounts also follow the provider agreement. Contact: privacyquestions@cloudflare.com. |
 
 - [Google Privacy Policy](https://policies.google.com/privacy)
-- [OpenAI Privacy Policy and contact](https://openai.com/policies/row-privacy-policy/)
 - [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/)
 
 ## 8. International processing
