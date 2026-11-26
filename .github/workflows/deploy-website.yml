@@ -69,7 +69,9 @@ jobs:
           AUTH_BASE_URL_OVERRIDE: ${{ inputs.auth_base_url }}
         run: |
           pnpm build
-          args=(--message "GitHub Actions ${GITHUB_SHA::7}")
+          # --keep-vars: variables added in the Cloudflare dashboard (not in wrangler.jsonc)
+          # survive the deploy. Without it, wrangler deletes them; secrets are never deleted.
+          args=(--keep-vars --message "GitHub Actions ${GITHUB_SHA::7}")
           if [ -n "$AUTH_BASE_URL_OVERRIDE" ]; then
             if [[ ! "$AUTH_BASE_URL_OVERRIDE" =~ ^https://[a-z0-9.-]+$ ]]; then
               echo "::error::auth_base_url must be an origin such as https://www.maclink.cloud"
