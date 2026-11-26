@@ -118,6 +118,10 @@ export const remoteMessages: Record<string, string> = {
  '우클릭':'Right click',
  '조이스틱 표시':'Show joystick',
  '조이스틱 숨기기':'Hide joystick',
- '조이스틱으로 포인터를 움직이고 A(좌클릭)·B(우클릭)로 클릭하세요 · 화면을 탭해도 클릭됩니다':'Move the pointer with the joystick and click with A (left) or B (right) · Tapping the screen also clicks',
+ '휠 스크롤':'Scroll wheel',
+ '위로 스크롤':'Scroll up',
+ '아래로 스크롤':'Scroll down',
+ '휠을 위아래로 끌어 스크롤':'Drag the wheel up or down to scroll',
+ '조이스틱으로 포인터를 움직이고 A(좌클릭)·B(우클릭)로 클릭, 오른쪽 휠로 스크롤하세요 · 화면을 탭해도 클릭됩니다':'Move the pointer with the joystick, click with A (left) or B (right) and scroll with the wheel on the right · Tapping the screen also clicks',
  '화면을 탭하면 그 위치를 클릭하고, 끌면 드래그합니다':'Tap the screen to click there, or drag to drag',
 };
