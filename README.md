@@ -63,7 +63,7 @@ The current release uses an ad-hoc signature and has no Developer ID signature o
 | View-only mode | Share the screen without granting mouse or keyboard control. |
 | WebRTC streaming | Connect directly or use an optional TURN relay. |
 | Windows keyboard mapping | Map Windows Ctrl shortcuts to Mac Command or configure modifier keys individually. |
-| Mobile joystick | On phones and tablets, move the pointer with the joystick at the bottom left and left- or right-click with the round buttons at the bottom right. |
+| Mobile input modes | On phones and tablets, choose Touch (tap the screen directly) or Joystick (a joystick plus round left- and right-click buttons). |
 | Quality presets | Select capture width, target frame rate and WebRTC encoder bitrate together. Ultra targets a maximum width of 2560 px at 60 fps. |
 
 ## Comparison with Paid Services
@@ -94,15 +94,22 @@ With **Ultra**, a supporting browser plays **48 kHz stereo, 32-bit floating-poin
 
 **Disconnect** ends the current connection. **Sign out** or login expiry also ends remote connections bound to that login. Removing a device invalidates its Connector key and deletes related sessions.
 
-### Mobile Joystick
+### Mobile Input Modes
 
-When you connect in control mode from a touch-first device such as a phone or tablet, a joystick appears at the bottom left of the remote screen and round, game-pad style **Left click** and **Right click** buttons appear at the bottom right. Tilt the joystick slightly to move the pointer slowly, or all the way to move it quickly. The buttons click at the pointer position shown on screen.
+When you connect in control mode from a touch-first device such as a phone or tablet, choose **Touch** or **Joystick** in the toolbar. The choice is saved in this browser.
 
-- **Drag:** hold the Left click button while moving the joystick.
+| Mode | Behavior |
+| --- | --- |
+| Touch | Tap the screen to click at that spot; drag a finger to drag. |
+| Joystick (default) | Move the pointer with the joystick at the bottom left and click with the round, game-pad style **Left click** and **Right click** buttons at the bottom right. Tapping the screen moves the pointer there without clicking. |
+
+In Joystick mode:
+
+- **Move:** tilt the joystick slightly to move the pointer slowly, or all the way to move it quickly.
+- **Drag:** hold the Left click button while moving the joystick or dragging a finger on the screen.
 - **Double-click:** press the Left click button twice quickly.
-- **Direct tap:** tapping the screen clicks at that spot and moves the pointer there.
 
-The Mac's video stream does not include the mouse pointer, so the website draws the pointer position itself. Use the **Joystick** button in the toolbar to hide or show the controls. It works with the website alone; no Connector update is required.
+The Mac's video stream does not include the mouse pointer, so in Joystick mode the website draws the pointer position itself. It works with the website alone; no Connector update is required.
 
 ### Keyboard, Quality and Fullscreen
 
