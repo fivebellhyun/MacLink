@@ -63,7 +63,7 @@ The current release uses an ad-hoc signature and has no Developer ID signature o
 | View-only mode | Share the screen without granting mouse or keyboard control. |
 | WebRTC streaming | Connect directly or use an optional TURN relay. |
 | Windows keyboard mapping | Map Windows Ctrl shortcuts to Mac Command or configure modifier keys individually. |
-| Mobile joystick | On phones and tablets, move the pointer with the joystick at the bottom left and click with the translucent A (left click) and B (right click) buttons at the bottom right. |
+| Mobile joystick | On phones and tablets, move the pointer with the joystick, click with the translucent A (left click) and B (right click) buttons and scroll with the wheel on the right. |
 | Quality presets | Select capture width, target frame rate and WebRTC encoder bitrate together. Ultra targets a maximum width of 2560 px at 60 fps. |
 
 ## Comparison with Paid Services
@@ -96,12 +96,13 @@ With **Ultra**, a supporting browser plays **48 kHz stereo, 32-bit floating-poin
 
 ### Mobile Joystick
 
-When you connect in control mode from a touch-first device such as a phone or tablet, a joystick appears at the bottom left of the remote screen and round, game-pad style **A** (left click) and **B** (right click) buttons appear at the bottom right. The joystick and buttons are translucent so the screen behind them stays visible. Use the **Joystick** check button in the toolbar to show or hide them; the choice is saved in this browser.
+When you connect in control mode from a touch-first device such as a phone or tablet, a joystick appears at the bottom left of the remote screen and round, game-pad style **A** (left click) and **B** (right click) buttons appear at the bottom right, with a scroll wheel in the middle of the right edge. The joystick, buttons and wheel are translucent so the screen behind them stays visible. Use the **Joystick** check button in the toolbar to show or hide them; the choice is saved in this browser.
 
 - **Move:** tilt the joystick slightly to move the pointer slowly, or all the way to move it quickly.
 - **Click:** A is a left click and B is a right click, at the pointer position shown on screen.
 - **Drag:** hold A while moving the joystick. Dragging a finger on the screen also drags.
 - **Double-click:** press A twice quickly.
+- **Scroll:** drag the middle of the wheel up or down to scroll like a mouse wheel (drag down to scroll down). Tap ▲ or ▼ to scroll one step, or hold to keep scrolling.
 - **Screen tap:** whether or not the joystick is shown, tapping the screen clicks at that spot and moves the pointer there.
 
 The Mac's video stream does not include the mouse pointer, so while the joystick is shown the website draws a small pointer marker itself. It works with the website alone; no Connector update is required.
