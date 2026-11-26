@@ -1,8 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,type PointerEvent as ReactPointerEvent} from 'react';
-import {Gamepad2,Pointer} from 'lucide-react';
+import {Check} from 'lucide-react';
 import {useLocale} from '@/components/locale-provider';
-import type {TouchInputMode} from '@/lib/touch-input-mode';
 import {stickVector,type Stick,type VirtualCursor} from '@/lib/virtual-pointer';
 
 /** The remote screen's displayed area, in pixels relative to the controls' container. */
@@ -125,17 +124,16 @@ export function TouchControls({cursor,screen,disabled,onMove,onButton}:Props){
    <span ref={knob} className="touch-stick-knob" aria-hidden="true"/>
   </div>
   <div className="touch-buttons">
-   <button ref={element=>{buttons.current[2]=element;}} type="button" tabIndex={-1} className="touch-button secondary" aria-label={t('우클릭')} {...buttonEvents(2)}>{t('우클릭')}</button>
-   <button ref={element=>{buttons.current[0]=element;}} type="button" tabIndex={-1} className="touch-button primary" aria-label={t('좌클릭')} {...buttonEvents(0)}>{t('좌클릭')}</button>
+   <button ref={element=>{buttons.current[2]=element;}} type="button" tabIndex={-1} className="touch-button secondary" aria-label={t('우클릭')} title={t('우클릭')} {...buttonEvents(2)}>B</button>
+   <button ref={element=>{buttons.current[0]=element;}} type="button" tabIndex={-1} className="touch-button primary" aria-label={t('좌클릭')} title={t('좌클릭')} {...buttonEvents(0)}>A</button>
   </div>
  </div>;
 }
 
-/** Toolbar switch between touchscreen-style input and the joystick, with a visible selected state. */
-export function TouchModeSwitch({mode,onChange}:{mode:TouchInputMode;onChange:(mode:TouchInputMode)=>void}){
+/** Toolbar check button that shows or hides the joystick and A/B buttons; taps always click. */
+export function JoystickToggle({enabled,onChange}:{enabled:boolean;onChange:(enabled:boolean)=>void}){
  const {t}=useLocale();
- return <div className="input-mode" role="radiogroup" aria-label={t('터치 입력 방식')}>
-  <button type="button" role="radio" aria-checked={mode==='touch'} title={t('화면을 직접 탭해 클릭합니다')} onClick={()=>onChange('touch')}><Pointer size={15} aria-hidden="true"/><span>{t('터치')}</span></button>
-  <button type="button" role="radio" aria-checked={mode==='joystick'} title={t('화면 탭과 함께 조이스틱과 클릭 버튼을 사용합니다')} onClick={()=>onChange('joystick')}><Gamepad2 size={15} aria-hidden="true"/><span>{t('조이스틱')}</span></button>
- </div>;
+ return <button type="button" role="checkbox" aria-checked={enabled} className="joystick-toggle" title={t(enabled?'조이스틱 숨기기':'조이스틱 표시')} onClick={()=>onChange(!enabled)}>
+  <span className="joystick-check" aria-hidden="true">{enabled&&<Check size={12} strokeWidth={3.2}/>}</span><span>{t('조이스틱')}</span>
+ </button>;
 }

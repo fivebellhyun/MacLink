@@ -116,10 +116,8 @@ export const remoteMessages: Record<string, string> = {
  '포인터 이동 조이스틱':'Pointer joystick',
  '좌클릭':'Left click',
  '우클릭':'Right click',
- '터치 입력 방식':'Touch input mode',
- '터치':'Touch',
- '화면을 직접 탭해 클릭합니다':'Tap the screen directly to click',
- '화면 탭과 함께 조이스틱과 클릭 버튼을 사용합니다':'Use the joystick and click buttons alongside screen taps',
- '조이스틱으로 포인터를 움직이고 오른쪽 버튼으로 클릭하세요 · 화면을 탭해도 클릭됩니다':'Move the pointer with the joystick and click with the buttons on the right · Tapping the screen also clicks',
+ '조이스틱 표시':'Show joystick',
+ '조이스틱 숨기기':'Hide joystick',
+ '조이스틱으로 포인터를 움직이고 A(좌클릭)·B(우클릭)로 클릭하세요 · 화면을 탭해도 클릭됩니다':'Move the pointer with the joystick and click with A (left) or B (right) · Tapping the screen also clicks',
  '화면을 탭하면 그 위치를 클릭하고, 끌면 드래그합니다':'Tap the screen to click there, or drag to drag',
 };
