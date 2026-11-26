@@ -83,6 +83,8 @@ pnpm exec wrangler secret put TURN_CONFIG_KEY
 
 Worker가 아직 없으면 `wrangler secret put`이 같은 이름의 Worker를 먼저 만들지 묻습니다. 승인해도 되고, 5단계 배포 후에 등록해도 됩니다. 대시보드의 **Workers & Pages → maclink → Settings → Variables and Secrets → Add**에서 형식을 **Secret**으로 골라 등록할 수도 있습니다. 비밀 값은 이후 배포에서도 유지됩니다.
 
+`GOOGLE_CLIENT_ID`처럼 공개되어도 되는 값도 **Secret**으로 등록하세요. 대시보드에서 일반 텍스트 변수(Text)로 넣은 값은 `wrangler.jsonc`에 없으므로, `--keep-vars` 없이 `wrangler deploy`를 실행하면 삭제됩니다. 이 저장소의 `pnpm run deploy`와 GitHub Actions 워크플로는 `--keep-vars`로 배포해 이런 값을 유지합니다.
+
 ## 5. 배포
 
 ```bash
@@ -108,7 +110,7 @@ pnpm exec wrangler deploy --var AUTH_BASE_URL:https://maclink.maclink.workers.de
 2. **Actions → Deploy website → Run workflow**에서 배포할 브랜치를 고르고 실행합니다. 워크플로 파일이 기본 브랜치(`main`)에 있어야 이 메뉴에 나타납니다.
 3. 커스텀 도메인을 연결하기 전에는 `auth_base_url`에 `https://maclink.maclink.workers.dev`를 넣어 workers.dev에서 로그인을 시험할 수 있습니다. 비워 두면 `wrangler.jsonc`의 `https://www.maclink.cloud`를 사용합니다.
 
-워크플로는 Worker 비밀 값을 바꾸지 않습니다. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TURN_CONFIG_KEY`는 4단계처럼 Cloudflare에 한 번 등록하면 유지됩니다.
+워크플로는 Worker 비밀 값을 바꾸지 않고, `--keep-vars`로 배포해 대시보드에서 추가한 변수도 지우지 않습니다. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TURN_CONFIG_KEY`는 4단계처럼 Cloudflare에 한 번 등록하면 유지됩니다.
 
 ## 6. www.maclink.cloud 연결
 
