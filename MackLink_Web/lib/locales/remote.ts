@@ -112,4 +112,11 @@ export const remoteMessages: Record<string, string> = {
  'PCM 소리를 재생하려면 소리 버튼을 다시 눌러 주세요.':'Select the sound button again to enable PCM playback.',
  'PCM 소리를 사용할 수 없습니다. 일반 소리로 전환합니다.':'PCM sound is unavailable. Switching to standard audio.',
  '지원되는 브라우저에서 소리 버튼을 누르면 48kHz 스테레오 PCM을 사용할 수 있습니다. 소리 전송량은 약 3.1 Mbps이며, 사용할 수 없으면 Opus로 재생합니다.':'Select the sound button in a supported browser to use 48kHz stereo PCM. Audio uses about 3.1 Mbps; Opus is used when PCM is unavailable.',
+ '조이스틱':'Joystick',
+ '터치 조이스틱 표시':'Show touch joystick',
+ '터치 조이스틱 숨기기':'Hide touch joystick',
+ '포인터 이동 조이스틱':'Pointer joystick',
+ '좌클릭':'Left click',
+ '우클릭':'Right click',
+ '왼쪽 조이스틱으로 포인터를 움직이고 오른쪽 버튼으로 클릭하세요':'Move the pointer with the left joystick and click with the buttons on the right',
 };

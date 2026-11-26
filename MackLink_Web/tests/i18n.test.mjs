@@ -134,6 +134,7 @@ test('visible Korean JSX and UI message literals are covered by the translation 
     'components/network-settings.tsx',
     'components/remote-viewer.tsx',
     'components/remote-settings.tsx',
+    'components/touch-controls.tsx',
     'components/connect-mac-approval.tsx',
     'lib/enrollment-client.ts',
     'lib/quality.ts',
