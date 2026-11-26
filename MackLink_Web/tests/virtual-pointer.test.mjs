@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {stickVector,VirtualCursor,JOYSTICK_DEADZONE,JOYSTICK_MAX_SPEED} from '../lib/virtual-pointer.ts';
+import {stickVector,VirtualCursor,WheelAccumulator,JOYSTICK_DEADZONE,JOYSTICK_MAX_SPEED,WHEEL_MAX} from '../lib/virtual-pointer.ts';
 
 const close=(actual,expected,message)=>assert.ok(Math.abs(actual-expected)<1e-9,`${message??''} expected ${expected}, got ${actual}`);
 
@@ -60,4 +60,26 @@ test('listeners hear moves and layout refreshes until they unsubscribe',()=>{
  assert.equal(calls,2);
  stop();cursor.set(0.4,0.4);
  assert.equal(calls,2);
+});
+
+test('full tilt is 20% slower than the original 0.9 screen widths per second',()=>{
+ close(JOYSTICK_MAX_SPEED,0.9*0.8);
+});
+
+test('the touch wheel sends whole pixels and keeps fractions for the next event',()=>{
+ const wheel=new WheelAccumulator();
+ assert.equal(wheel.take(),0);
+ wheel.add(2.6);assert.equal(wheel.take(),2);
+ wheel.add(0.6);assert.equal(wheel.take(),1);
+ wheel.add(-3.4);assert.equal(wheel.take(),-3);
+ assert.equal(wheel.take(),0);
+});
+
+test('a large wheel flick is split at the protocol limit, never dropped, and ignores bad input',()=>{
+ const wheel=new WheelAccumulator();
+ wheel.add(4500);
+ assert.deepEqual([wheel.take(),wheel.take(),wheel.take(),wheel.take()],[WHEEL_MAX,WHEEL_MAX,500,0]);
+ wheel.add(-2500);assert.equal(wheel.take(),-WHEEL_MAX);
+ wheel.add(Number.NaN);wheel.add(Number.POSITIVE_INFINITY);assert.equal(wheel.take(),-500);
+ wheel.add(30);wheel.reset();assert.equal(wheel.take(),0);
 });

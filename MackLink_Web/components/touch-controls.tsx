@@ -1,8 +1,8 @@
 'use client';
 import {useCallback,useEffect,useRef,type PointerEvent as ReactPointerEvent} from 'react';
-import {Check} from 'lucide-react';
+import {Check,ChevronDown,ChevronUp} from 'lucide-react';
 import {useLocale} from '@/components/locale-provider';
-import {stickVector,type Stick,type VirtualCursor} from '@/lib/virtual-pointer';
+import {stickVector,WheelAccumulator,WHEEL_DRAG_GAIN,WHEEL_STEP,type Stick,type VirtualCursor} from '@/lib/virtual-pointer';
 
 /** The remote screen's displayed area, in pixels relative to the controls' container. */
 export type ScreenRect={left:number;top:number;width:number;height:number};
@@ -14,24 +14,32 @@ type Props={
  onMove:(x:number,y:number)=>void;
  /** Returns false when input is not currently allowed. */
  onButton:(button:MouseButton,down:boolean)=>boolean;
+ /** Scroll by `dy` remote pixels; positive scrolls down. */
+ onWheel:(dy:number)=>void;
 };
 type StickState={pointer:number;cx:number;cy:number;radius:number;vector:Stick};
+type WheelRepeat={pointer:number;element:HTMLElement;delay:ReturnType<typeof setTimeout>;timer:ReturnType<typeof setInterval>|null};
 
 /** Share of the stick base's radius the knob can travel. */
 const KNOB_TRAVEL=0.62;
+/** Holding ▲/▼ starts repeating after this delay, then ticks at this interval. */
+const WHEEL_REPEAT_DELAY=350,WHEEL_REPEAT_MS=60;
 const swallow=(e:ReactPointerEvent)=>{e.preventDefault();e.stopPropagation();};
 const stop=(e:{stopPropagation:()=>void})=>e.stopPropagation();
 
 /**
- * On-screen joystick (bottom left) and round left/right click buttons (bottom right) for touch
- * devices. The Mac's cursor is not part of the video, so a local marker shows the pointer.
+ * On-screen joystick (bottom left), round A/B click buttons (bottom right) and a scroll wheel
+ * (right edge, middle) for touch devices. The Mac's cursor is not part of the video, so a local
+ * marker shows the pointer.
  */
-export function TouchControls({cursor,screen,disabled,onMove,onButton}:Props){
+export function TouchControls({cursor,screen,disabled,onMove,onButton,onWheel}:Props){
  const {t}=useLocale();
  const base=useRef<HTMLDivElement>(null),knob=useRef<HTMLSpanElement>(null),mark=useRef<HTMLDivElement>(null);
  const buttons=useRef<Record<MouseButton,HTMLButtonElement|null>>({0:null,2:null});
  const stick=useRef<StickState|null>(null),frame=useRef(0),last=useRef(0),held=useRef(new Map<number,MouseButton>());
- const latest=useRef({screen,onMove,onButton});latest.current={screen,onMove,onButton};
+ const latest=useRef({screen,onMove,onButton,onWheel});latest.current={screen,onMove,onButton,onWheel};
+ const wheel=useRef(new WheelAccumulator()),wheelFrame=useRef(0),grip=useRef<HTMLButtonElement>(null);
+ const wheelDrag=useRef<{pointer:number;y:number}|null>(null),wheelOffset=useRef(0),wheelRepeat=useRef<WheelRepeat|null>(null);
  // Pressed styling is applied directly, like the knob position, to avoid re-rendering on every touch.
  const showPressed=useCallback(()=>{
   const active=new Set(held.current.values());
@@ -69,9 +77,33 @@ export function TouchControls({cursor,screen,disabled,onMove,onButton}:Props){
   return()=>{unsubscribe();observer?.disconnect();window.removeEventListener('resize',place);};
  },[cursor,place]);
 
- // Never leave a button held or the pointer drifting once input is paused or the controls hide.
- useEffect(()=>{if(disabled){endStick();releaseButtons();}},[disabled,endStick,releaseButtons]);
- useEffect(()=>()=>{endStick();releaseButtons();},[endStick,releaseButtons]);
+ // Wheel movement is coalesced per animation frame so a fast drag sends a few events, not dozens.
+ const flushWheel=useCallback(()=>{
+  wheelFrame.current=0;
+  for(let dy=wheel.current.take();dy!==0;dy=wheel.current.take())latest.current.onWheel(dy);
+ },[]);
+ const queueWheel=useCallback((dy:number)=>{
+  wheel.current.add(dy);
+  if(!wheelFrame.current)wheelFrame.current=requestAnimationFrame(flushWheel);
+ },[flushWheel]);
+ const stopWheelRepeat=useCallback(()=>{
+  const repeat=wheelRepeat.current;wheelRepeat.current=null;if(!repeat)return;
+  clearTimeout(repeat.delay);if(repeat.timer)clearInterval(repeat.timer);
+  repeat.element.classList.remove('active');
+  if(repeat.element.hasPointerCapture(repeat.pointer))repeat.element.releasePointerCapture(repeat.pointer);
+ },[]);
+ const endWheelDrag=useCallback(()=>{
+  const drag=wheelDrag.current;wheelDrag.current=null;grip.current?.classList.remove('active');
+  if(drag&&grip.current?.hasPointerCapture(drag.pointer))grip.current.releasePointerCapture(drag.pointer);
+ },[]);
+ const endWheel=useCallback(()=>{
+  stopWheelRepeat();endWheelDrag();
+  if(wheelFrame.current)cancelAnimationFrame(wheelFrame.current);wheelFrame.current=0;wheel.current.reset();
+ },[stopWheelRepeat,endWheelDrag]);
+
+ // Never leave a button held, the pointer drifting or the wheel spinning once input pauses or the controls hide.
+ useEffect(()=>{if(disabled){endStick();releaseButtons();endWheel();}},[disabled,endStick,releaseButtons,endWheel]);
+ useEffect(()=>()=>{endStick();releaseButtons();endWheel();},[endStick,releaseButtons,endWheel]);
 
  function tick(now:number){
   const state=stick.current;if(!state){frame.current=0;return;}
@@ -110,6 +142,35 @@ export function TouchControls({cursor,screen,disabled,onMove,onButton}:Props){
   if(![...held.current.values()].includes(button))latest.current.onButton(button,false);
   showPressed();
  }
+ // Dragging the wheel's ridges scrolls like a mouse wheel: finger down scrolls down.
+ function gripDown(e:ReactPointerEvent<HTMLButtonElement>){
+  swallow(e);if(disabled||wheelDrag.current)return;
+  wheelDrag.current={pointer:e.pointerId,y:e.clientY};
+  e.currentTarget.setPointerCapture(e.pointerId);e.currentTarget.classList.add('active');
+ }
+ function gripMove(e:ReactPointerEvent<HTMLButtonElement>){
+  const drag=wheelDrag.current;if(!drag||drag.pointer!==e.pointerId)return;
+  swallow(e);const delta=e.clientY-drag.y;drag.y=e.clientY;if(!delta)return;
+  wheelOffset.current+=delta;e.currentTarget.style.backgroundPositionY=`${wheelOffset.current}px`;
+  queueWheel(delta*WHEEL_DRAG_GAIN);
+ }
+ function gripUp(e:ReactPointerEvent){if(wheelDrag.current?.pointer===e.pointerId){swallow(e);endWheelDrag();}}
+ // ▲/▼ scroll one step per tap and keep scrolling while held.
+ function stepDown(direction:1|-1,e:ReactPointerEvent<HTMLButtonElement>){
+  swallow(e);if(disabled||wheelRepeat.current)return;
+  const element=e.currentTarget;element.setPointerCapture(e.pointerId);element.classList.add('active');
+  queueWheel(direction*WHEEL_STEP);navigator.vibrate?.(5);
+  const repeat:WheelRepeat={pointer:e.pointerId,element,timer:null,delay:setTimeout(()=>{
+   if(wheelRepeat.current===repeat)repeat.timer=setInterval(()=>queueWheel(direction*WHEEL_STEP),WHEEL_REPEAT_MS);
+  },WHEEL_REPEAT_DELAY)};
+  wheelRepeat.current=repeat;
+ }
+ function stepUp(e:ReactPointerEvent){if(wheelRepeat.current?.pointer===e.pointerId){swallow(e);stopWheelRepeat();}}
+ const stepEvents=(direction:1|-1)=>({
+  onPointerDown:(e:ReactPointerEvent<HTMLButtonElement>)=>stepDown(direction,e),
+  onPointerUp:stepUp,onPointerCancel:stepUp,onLostPointerCapture:stepUp,
+ });
+
  const buttonEvents=(button:MouseButton)=>({
   onPointerDown:(e:ReactPointerEvent<HTMLButtonElement>)=>buttonDown(button,e),
   onPointerUp:buttonUp,onPointerCancel:buttonUp,onLostPointerCapture:buttonUp,
@@ -126,6 +187,12 @@ export function TouchControls({cursor,screen,disabled,onMove,onButton}:Props){
   <div className="touch-buttons">
    <button ref={element=>{buttons.current[2]=element;}} type="button" tabIndex={-1} className="touch-button secondary" aria-label={t('우클릭')} title={t('우클릭')} {...buttonEvents(2)}>B</button>
    <button ref={element=>{buttons.current[0]=element;}} type="button" tabIndex={-1} className="touch-button primary" aria-label={t('좌클릭')} title={t('좌클릭')} {...buttonEvents(0)}>A</button>
+  </div>
+  <div className="touch-wheel" role="group" aria-label={t('휠 스크롤')}>
+   <button type="button" tabIndex={-1} className="touch-wheel-step" aria-label={t('위로 스크롤')} title={t('위로 스크롤')} {...stepEvents(-1)}><ChevronUp size={17} strokeWidth={2.2} aria-hidden="true"/></button>
+   {/* A button, like ▲/▼, so mobile touch adjustment keeps a touch near its edge on the grip. */}
+   <button ref={grip} type="button" tabIndex={-1} className="touch-wheel-grip" aria-label={t('휠을 위아래로 끌어 스크롤')} onPointerDown={gripDown} onPointerMove={gripMove} onPointerUp={gripUp} onPointerCancel={gripUp} onLostPointerCapture={gripUp}/>
+   <button type="button" tabIndex={-1} className="touch-wheel-step" aria-label={t('아래로 스크롤')} title={t('아래로 스크롤')} {...stepEvents(1)}><ChevronDown size={17} strokeWidth={2.2} aria-hidden="true"/></button>
   </div>
  </div>;
 }

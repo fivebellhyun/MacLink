@@ -4,7 +4,7 @@ export type Stick={x:number;y:number};
 /** Share of the stick radius that is ignored so a resting thumb does not drift the pointer. */
 export const JOYSTICK_DEADZONE=0.12;
 /** Full deflection moves the pointer this many remote-screen widths per second. */
-export const JOYSTICK_MAX_SPEED=0.9;
+export const JOYSTICK_MAX_SPEED=0.72;
 /** A late animation frame (background tab, slow device) never jumps further than this. */
 const MAX_STEP_MS=50;
 const clamp=(value:number)=>Math.min(1,Math.max(0,value));
@@ -44,4 +44,27 @@ export class VirtualCursor {
  /** Notify listeners, e.g. after the remote screen size or layout changed. */
  changed(){for(const listener of this.listeners)listener();}
  subscribe(listener:()=>void){this.listeners.add(listener);return()=>{this.listeners.delete(listener);};}
+}
+
+/** Remote scroll pixels per phone pixel dragged on the touch wheel. */
+export const WHEEL_DRAG_GAIN=3;
+/** Remote scroll pixels per ▲/▼ tick (one tap, or each repeat while held). */
+export const WHEEL_STEP=80;
+/** The connector protocol accepts wheel deltas up to this size per event. */
+export const WHEEL_MAX=2000;
+
+/**
+ * Collects touch-wheel movement and hands it out in whole pixels, at most WHEEL_MAX per event.
+ * Fractions and anything above the limit stay queued for the next event instead of being lost.
+ */
+export class WheelAccumulator {
+ private pending=0;
+ add(dy:number){if(Number.isFinite(dy))this.pending+=dy;}
+ /** Whole pixels to send now (0 when nothing is due); positive scrolls down. */
+ take(){
+  const amount=Math.max(-WHEEL_MAX,Math.min(WHEEL_MAX,Math.trunc(this.pending)));
+  // `|| 0` turns Math.trunc's -0 (from a small negative remainder) into a plain 0.
+  this.pending-=amount;return amount||0;
+ }
+ reset(){this.pending=0;}
 }
