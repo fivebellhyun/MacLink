@@ -189,10 +189,10 @@ export function TouchControls({cursor,screen,disabled,onMove,onButton,onWheel}:P
    <button ref={element=>{buttons.current[0]=element;}} type="button" tabIndex={-1} className="touch-button primary" aria-label={t('좌클릭')} title={t('좌클릭')} {...buttonEvents(0)}>A</button>
   </div>
   <div className="touch-wheel" role="group" aria-label={t('휠 스크롤')}>
-   <button type="button" tabIndex={-1} className="touch-wheel-step" aria-label={t('위로 스크롤')} title={t('위로 스크롤')} {...stepEvents(-1)}><ChevronUp size={18} strokeWidth={2.6} aria-hidden="true"/></button>
+   <button type="button" tabIndex={-1} className="touch-wheel-step" aria-label={t('위로 스크롤')} title={t('위로 스크롤')} {...stepEvents(-1)}><ChevronUp size={17} strokeWidth={2.2} aria-hidden="true"/></button>
    {/* A button, like ▲/▼, so mobile touch adjustment keeps a touch near its edge on the grip. */}
    <button ref={grip} type="button" tabIndex={-1} className="touch-wheel-grip" aria-label={t('휠을 위아래로 끌어 스크롤')} onPointerDown={gripDown} onPointerMove={gripMove} onPointerUp={gripUp} onPointerCancel={gripUp} onLostPointerCapture={gripUp}/>
-   <button type="button" tabIndex={-1} className="touch-wheel-step" aria-label={t('아래로 스크롤')} title={t('아래로 스크롤')} {...stepEvents(1)}><ChevronDown size={18} strokeWidth={2.6} aria-hidden="true"/></button>
+   <button type="button" tabIndex={-1} className="touch-wheel-step" aria-label={t('아래로 스크롤')} title={t('아래로 스크롤')} {...stepEvents(1)}><ChevronDown size={17} strokeWidth={2.2} aria-hidden="true"/></button>
   </div>
  </div>;
 }
