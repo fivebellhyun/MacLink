@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readTouchInputMode,writeTouchInputMode,screenTouchAimsOnly,DEFAULT_TOUCH_INPUT_MODE,TOUCH_INPUT_MODE_STORAGE} from '../lib/touch-input-mode.ts';
+import {readTouchInputMode,writeTouchInputMode,DEFAULT_TOUCH_INPUT_MODE,TOUCH_INPUT_MODE_STORAGE} from '../lib/touch-input-mode.ts';
 
 function memory(initial={}){const data={...initial};return {data,getItem:key=>key in data?data[key]:null,setItem:(key,value)=>{data[key]=String(value);}};}
 
@@ -19,10 +19,4 @@ test('unknown, tampered or unavailable storage falls back to the default mode',(
  const blocked={getItem(){throw new Error('SecurityError');},setItem(){throw new Error('QuotaExceededError');}};
  assert.equal(readTouchInputMode(blocked),DEFAULT_TOUCH_INPUT_MODE);
  assert.equal(writeTouchInputMode(blocked,'touch'),false);
-});
-
-test('only a finger in joystick mode aims without clicking; mouse and pen always click',()=>{
- assert.equal(screenTouchAimsOnly('joystick','touch'),true);
- for(const pointerType of ['mouse','pen',''])assert.equal(screenTouchAimsOnly('joystick',pointerType),false);
- for(const pointerType of ['touch','mouse','pen'])assert.equal(screenTouchAimsOnly('touch',pointerType),false);
 });

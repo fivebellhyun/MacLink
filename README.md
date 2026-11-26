@@ -100,14 +100,15 @@ When you connect in control mode from a touch-first device such as a phone or ta
 
 | Mode | Behavior |
 | --- | --- |
-| Touch | Tap the screen to click at that spot; drag a finger to drag. |
-| Joystick (default) | Move the pointer with the joystick at the bottom left and click with the round, game-pad style **Left click** and **Right click** buttons at the bottom right. Tapping the screen moves the pointer there without clicking. |
+| Touch | Hides the joystick. Tap the screen to click at that spot; drag a finger to drag. |
+| Joystick (default) | Tap the screen to click as in Touch mode, plus a joystick at the bottom left and round, game-pad style **Left click** and **Right click** buttons at the bottom right. |
 
 In Joystick mode:
 
 - **Move:** tilt the joystick slightly to move the pointer slowly, or all the way to move it quickly.
-- **Drag:** hold the Left click button while moving the joystick or dragging a finger on the screen.
+- **Drag:** hold the Left click button while moving the joystick. Dragging a finger on the screen also drags.
 - **Double-click:** press the Left click button twice quickly.
+- **Screen tap:** clicks at that spot and moves the pointer there.
 
 The Mac's video stream does not include the mouse pointer, so in Joystick mode the website draws the pointer position itself. It works with the website alone; no Connector update is required.
 

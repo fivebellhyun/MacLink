@@ -119,7 +119,7 @@ export const remoteMessages: Record<string, string> = {
  '터치 입력 방식':'Touch input mode',
  '터치':'Touch',
  '화면을 직접 탭해 클릭합니다':'Tap the screen directly to click',
- '조이스틱으로 포인터를 움직이고 버튼으로 클릭합니다':'Move the pointer with the joystick and click with the buttons',
- '조이스틱으로 포인터를 움직이고 오른쪽 버튼으로 클릭하세요 · 화면을 탭하면 포인터만 옮깁니다':'Move the pointer with the joystick and click with the buttons on the right · Tapping the screen only moves the pointer',
+ '화면 탭과 함께 조이스틱과 클릭 버튼을 사용합니다':'Use the joystick and click buttons alongside screen taps',
+ '조이스틱으로 포인터를 움직이고 오른쪽 버튼으로 클릭하세요 · 화면을 탭해도 클릭됩니다':'Move the pointer with the joystick and click with the buttons on the right · Tapping the screen also clicks',
  '화면을 탭하면 그 위치를 클릭하고, 끌면 드래그합니다':'Tap the screen to click there, or drag to drag',
 };

@@ -136,6 +136,6 @@ export function TouchModeSwitch({mode,onChange}:{mode:TouchInputMode;onChange:(m
  const {t}=useLocale();
  return <div className="input-mode" role="radiogroup" aria-label={t('터치 입력 방식')}>
   <button type="button" role="radio" aria-checked={mode==='touch'} title={t('화면을 직접 탭해 클릭합니다')} onClick={()=>onChange('touch')}><Pointer size={15} aria-hidden="true"/><span>{t('터치')}</span></button>
-  <button type="button" role="radio" aria-checked={mode==='joystick'} title={t('조이스틱으로 포인터를 움직이고 버튼으로 클릭합니다')} onClick={()=>onChange('joystick')}><Gamepad2 size={15} aria-hidden="true"/><span>{t('조이스틱')}</span></button>
+  <button type="button" role="radio" aria-checked={mode==='joystick'} title={t('화면 탭과 함께 조이스틱과 클릭 버튼을 사용합니다')} onClick={()=>onChange('joystick')}><Gamepad2 size={15} aria-hidden="true"/><span>{t('조이스틱')}</span></button>
  </div>;
 }
