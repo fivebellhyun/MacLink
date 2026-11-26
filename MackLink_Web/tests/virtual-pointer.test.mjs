@@ -62,8 +62,8 @@ test('listeners hear moves and layout refreshes until they unsubscribe',()=>{
  assert.equal(calls,2);
 });
 
-test('full tilt is 20% slower than the original 0.9 screen widths per second',()=>{
- close(JOYSTICK_MAX_SPEED,0.9*0.8);
+test('full tilt is half the previous 0.72 screen widths per second',()=>{
+ close(JOYSTICK_MAX_SPEED,0.72*0.5);
 });
 
 test('the touch wheel sends whole pixels and keeps fractions for the next event',()=>{

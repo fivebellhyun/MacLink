@@ -4,7 +4,7 @@ export type Stick={x:number;y:number};
 /** Share of the stick radius that is ignored so a resting thumb does not drift the pointer. */
 export const JOYSTICK_DEADZONE=0.12;
 /** Full deflection moves the pointer this many remote-screen widths per second. */
-export const JOYSTICK_MAX_SPEED=0.72;
+export const JOYSTICK_MAX_SPEED=0.36;
 /** A late animation frame (background tab, slow device) never jumps further than this. */
 const MAX_STEP_MS=50;
 const clamp=(value:number)=>Math.min(1,Math.max(0,value));
