@@ -57,3 +57,8 @@ html[lang=en] .hero h1{font-size:40px;letter-spacing:-1.5px}html[lang=en] .conne
 .touch-button.active{transform:scale(.92);filter:brightness(1.2);box-shadow:0 3px 10px #0008,inset 0 3px 0 #0003}
 .touch-controls[aria-disabled=true] .touch-stick,.touch-controls[aria-disabled=true] .touch-button{opacity:.4}
 @media(max-height:480px){.touch-stick{width:112px;height:112px}.touch-stick-knob{width:50px;height:50px}.touch-buttons{width:130px;height:112px}.touch-button.primary{width:68px;height:68px;font-size:12px}.touch-button.secondary{width:54px;height:54px;font-size:10px}}
+.input-mode{display:flex;gap:2px;padding:2px;border-radius:8px;background:#0000002e;border:1px solid #ffffff17}
+.remote-tools .input-mode button{padding:6px 10px;border-radius:6px;background:none;color:#9cae93}
+.remote-tools .input-mode button>span{display:inline}
+.remote-tools .input-mode button:hover{background:#ffffff0d}
+.remote-tools .input-mode button[aria-checked=true]{background:#2b7054;color:#fff;box-shadow:0 1px 4px #0006}

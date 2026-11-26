@@ -1,6 +1,8 @@
 'use client';
 import {useCallback,useEffect,useRef,type PointerEvent as ReactPointerEvent} from 'react';
+import {Gamepad2,Pointer} from 'lucide-react';
 import {useLocale} from '@/components/locale-provider';
+import type {TouchInputMode} from '@/lib/touch-input-mode';
 import {stickVector,type Stick,type VirtualCursor} from '@/lib/virtual-pointer';
 
 /** The remote screen's displayed area, in pixels relative to the controls' container. */
@@ -126,5 +128,14 @@ export function TouchControls({cursor,screen,disabled,onMove,onButton}:Props){
    <button ref={element=>{buttons.current[2]=element;}} type="button" tabIndex={-1} className="touch-button secondary" aria-label={t('우클릭')} {...buttonEvents(2)}>{t('우클릭')}</button>
    <button ref={element=>{buttons.current[0]=element;}} type="button" tabIndex={-1} className="touch-button primary" aria-label={t('좌클릭')} {...buttonEvents(0)}>{t('좌클릭')}</button>
   </div>
+ </div>;
+}
+
+/** Toolbar switch between touchscreen-style input and the joystick, with a visible selected state. */
+export function TouchModeSwitch({mode,onChange}:{mode:TouchInputMode;onChange:(mode:TouchInputMode)=>void}){
+ const {t}=useLocale();
+ return <div className="input-mode" role="radiogroup" aria-label={t('터치 입력 방식')}>
+  <button type="button" role="radio" aria-checked={mode==='touch'} title={t('화면을 직접 탭해 클릭합니다')} onClick={()=>onChange('touch')}><Pointer size={15} aria-hidden="true"/><span>{t('터치')}</span></button>
+  <button type="button" role="radio" aria-checked={mode==='joystick'} title={t('조이스틱으로 포인터를 움직이고 버튼으로 클릭합니다')} onClick={()=>onChange('joystick')}><Gamepad2 size={15} aria-hidden="true"/><span>{t('조이스틱')}</span></button>
  </div>;
 }
