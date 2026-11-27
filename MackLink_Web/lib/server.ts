@@ -46,8 +46,10 @@ export async function handleApi(req: Request, env: Bindings): Promise<Response> 
     const suspend=async(s:Row,reason:string)=>{await sql("UPDATE sessions SET status='reconnecting',reason=?,offer='',answer=NULL WHERE id=? AND generation=? AND status IN ('active','approved')",reason,s.id,s.generation).run();};
     // Recheck freshness in the mutation: a heartbeat can arrive after the stale read.
     const expireLease=async(s:Row,reason:string,checkDevice=false)=>{const r=await sql("UPDATE sessions SET status='reconnecting',reason=?,offer='',answer=NULL WHERE id=? AND generation=? AND status IN ('approved','active') AND (seen<?"+(checkDevice?" OR EXISTS (SELECT 1 FROM devices WHERE devices.id=sessions.device AND enabled=1 AND seen<?)":"")+")",reason,s.id,s.generation,now-20000,...(checkDevice?[now-15000]:[])).run();return !!r.meta.changes;};
-    const cleanup=async(device:string)=>{const stale=await sql("SELECT * FROM sessions WHERE device=? AND status IN ('approved','active') AND seen<?",device,now-20000).all<Row>();for(const s of stale.results)await expireLease(s,'네트워크 복구를 기다리고 있습니다.');};
-    const liveAuthorization="EXISTS (SELECT 1 FROM auth_sessions AS login JOIN devices AS host ON host.id=sessions.device WHERE login.token_hash=sessions.auth_session_hash AND login.user_id=sessions.owner AND login.expires>? AND host.owner=sessions.owner AND host.enabled=1)";
+    const cleanup=async(device:string)=>{const stale=await sql("SELECT * FROM sessions WHERE device=? AND status!='ended' AND status IN ('approved','active') AND seen<?",device,now-20000).all<Row>();for(const s of stale.results)await expireLease(s,'네트워크 복구를 기다리고 있습니다.');};
+    // Queries on a device's sessions repeat status!='ended' so SQLite can use the partial index
+ // sessions_device_live and read only live sessions, not every past connection (D1 bills rows read).
+ const liveAuthorization="EXISTS (SELECT 1 FROM auth_sessions AS login JOIN devices AS host ON host.id=sessions.device WHERE login.token_hash=sessions.auth_session_hash AND login.user_id=sessions.owner AND login.expires>? AND host.owner=sessions.owner AND host.enabled=1)";
     const revokeExpired=async(device:string)=>{await sql("UPDATE sessions SET status='ended',reason='로그인이 종료되었습니다. 다시 로그인해 주세요.',offer='',answer=NULL,generation=generation+1 WHERE device=? AND status!='ended' AND NOT "+liveAuthorization,device,now).run();};
     const browserSession=async(id:string)=>{
       requireOwner();assert(auth,401,'세션 키가 필요합니다.');
@@ -120,7 +122,7 @@ export async function handleApi(req: Request, env: Bindings): Promise<Response> 
         // create a session from a stale authorization snapshot.
         const r=await sql("INSERT INTO sessions (id,device,owner,auth_session_hash,guest_hash,guest_name,mode,status,offer,created,expires,seen,generation,quality) SELECT ?,?,?,?,?,?,?,'approved',?,?,0,?,0,? WHERE EXISTS (SELECT 1 FROM devices WHERE id=? AND owner=? AND enabled=1 AND seen>?) AND EXISTS (SELECT 1 FROM auth_sessions WHERE token_hash=? AND user_id=? AND expires>?) AND NOT EXISTS (SELECT 1 FROM sessions WHERE device=? AND status!='ended' AND seen>?)",id,d.id,owner,user!.sessionHash,await hash(token),'Device owner',mode,b.offer,now,now,DEFAULT_VIDEO_QUALITY,d.id,owner,now-12000,user!.sessionHash,owner,now,d.id,now-20000).run();
         assert(r.meta.changes===1,409,'다른 접속이 진행 중입니다. 기존 연결을 종료한 뒤 다시 시도해 주세요.');
-        const old=await sql("SELECT * FROM sessions WHERE device=? AND id!=? AND status='reconnecting'",d.id,id).all<Row>();for(const prior of old.results)await finish(prior,'새 연결로 대체되었습니다.');
+        const old=await sql("SELECT * FROM sessions WHERE device=? AND id!=? AND status!='ended' AND status='reconnecting'",d.id,id).all<Row>();for(const prior of old.results)await finish(prior,'새 연결로 대체되었습니다.');
         return json({id,token,name:d.name,deviceId:d.id,ownerId:owner,mode,status:'approved',expires:null,generation:0},201);
       }
       if(path[2]==='stop' && path.length===3 && method==='POST') {
@@ -186,7 +188,7 @@ export async function handleApi(req: Request, env: Bindings): Promise<Response> 
         if(b.info?.qualityControl===true&&report&&typeof report.session==='string'&&Number.isInteger(report.generation)&&isVideoQuality(report.profile))maintenance.push(sql("UPDATE sessions SET quality_applied=? WHERE id=? AND device=? AND generation=? AND quality=? AND status='active' AND quality_applied IS NOT ?",report.profile,report.session,d.id,report.generation,report.profile,report.profile));
         if(maintenance.length)await db!.batch(maintenance);
         await revokeExpired(d.id);await cleanup(d.id);
-        const s=await sql("SELECT * FROM sessions WHERE device=? AND status IN ('approved','active') ORDER BY created DESC LIMIT 1",d.id).first<Row>();
+        const s=await sql("SELECT * FROM sessions WHERE device=? AND status!='ended' AND status IN ('approved','active') ORDER BY created DESC LIMIT 1",d.id).first<Row>();
         return json({session:sessionReply(s)});
       }
       const b=await body();

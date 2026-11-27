@@ -82,7 +82,7 @@ test('cleanup and guest expiry cannot suspend a heartbeat that completed after t
     if(route==='guest'&&q.startsWith("UPDATE sessions SET status='reconnecting'")){releaseHeartbeat();await heartbeat;}
     return run();
    };
-   statement.all=async()=>{const rows=await all();if(route==='cleanup'&&q.startsWith("SELECT * FROM sessions WHERE device=? AND status IN ('approved','active') AND seen<")&&rows.results.length){releaseHeartbeat();await heartbeat;}return rows;};
+   statement.all=async()=>{const rows=await all();if(route==='cleanup'&&q.startsWith("SELECT * FROM sessions WHERE device=? AND status!='ended' AND status IN ('approved','active') AND seen<")&&rows.results.length){releaseHeartbeat();await heartbeat;}return rows;};
    return statement;
   };
   const heartbeat=h.call('sessions/'+s.id,{token:s.token});await started;clock+=2;

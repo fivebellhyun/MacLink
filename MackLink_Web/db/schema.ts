@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 export const devices = sqliteTable('devices', {
   id: text('id').primaryKey(), owner: text('owner').notNull(), name: text('name').notNull(),
@@ -14,7 +15,13 @@ export const sessions = sqliteTable('sessions', {
   offer: text('offer').notNull(), answer: text('answer'), created: integer('created').notNull(),
   expires: integer('expires').notNull(), seen: integer('seen').notNull(), reason: text('reason'),
   quality: text('quality').notNull().default('balanced'), qualityApplied: text('quality_applied'),
-}, t => [index('sessions_device').on(t.device), index('sessions_auth').on(t.authSessionHash)]);
+}, t => [
+  // History lists read only the newest rows per device instead of every past connection.
+  index('sessions_device_created').on(t.device, t.created),
+  // Heartbeats and connection checks only look at live sessions; ended ones stay out of this index.
+  index('sessions_device_live').on(t.device, t.created).where(sql`status != 'ended'`),
+  index('sessions_auth').on(t.authSessionHash),
+]);
 export const turnSettings = sqliteTable('turn_settings', {
   owner: text('owner').primaryKey(), sealed: text('sealed').notNull(), updated: integer('updated').notNull(),
 });
